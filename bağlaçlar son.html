@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bağlaç Öğrenme Modu</title>
+  <style>
+
+
+#selectScreen{
+  overflow-y:auto;
+  padding-bottom:30px;
+}
+
+
+
+
+    :root{
+      --bg1:#0d47c9; --bg2:#1db7e8; --text:#eef5ff; --shadow:0 18px 45px rgba(0,0,0,.22);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.16); --orange1:#ffb100; --orange2:#ff6200;
+      --blue1:#44c7ff; --blue2:#1159ff; --green1:#8be23f; --green2:#2eb248;
+      --purple1:#c86dff; --purple2:#6529ff; --red1:#ff7d8c; --red2:#d92b46;
+      --wood1:#c58945; --wood2:#8d5420;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:"Segoe UI",Arial,sans-serif; color:var(--text);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.16), transparent 18%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,.14), transparent 20%),
+        radial-gradient(circle at 70% 80%, rgba(255,255,255,.10), transparent 15%),
+        linear-gradient(180deg, #0d43b9 0%, #1769dd 35%, #2cc6ee 100%);
+      overflow-x:hidden;
+    }
+    .app{height:100vh; padding:10px; max-width:1280px; margin:0 auto; overflow:hidden;}
+    .screen{display:none; height:calc(100vh - 20px); position:relative; overflow:hidden;}
+    .screen.active{display:block}
+    .topbar{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:nowrap; margin-bottom:8px;}
+    .left, .right{display:flex; gap:8px; align-items:center; flex-wrap:nowrap;}
+    .btn, .nav-link, .pill, .choice-btn, .mode-btn{
+      border:none; color:#fff; cursor:pointer; font-weight:900; text-shadow:0 2px 8px rgba(0,0,0,.24);
+      box-shadow: inset 0 3px 0 rgba(255,255,255,.35), inset 0 -8px 0 rgba(0,0,0,.18), 0 16px 24px rgba(0,0,0,.14);
+      transition:.16s transform,.16s filter;
+    }
+    .btn:hover, .nav-link:hover, .pill:hover, .choice-btn:hover, .mode-btn:hover{transform:translateY(-2px)}
+    .btn, .nav-link{padding:10px 16px; border-radius:999px; min-height:48px; font-size:20px; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; white-space:nowrap;}
+    .btn-blue{background:linear-gradient(180deg,var(--blue1),var(--blue2))}
+    .btn-orange{background:linear-gradient(180deg,var(--orange1),var(--orange2))}
+    .btn-green{background:linear-gradient(180deg,var(--green1),var(--green2))}
+    .btn-purple{background:linear-gradient(180deg,var(--purple1),var(--purple2))}
+    .btn-red{background:linear-gradient(180deg,var(--red1),var(--red2))}
+    .title{font-size:clamp(28px,3.4vw,46px); font-weight:900; text-align:center; margin:4px 0 2px; text-shadow:0 4px 18px rgba(0,0,0,.18)}
+    .subtitle{text-align:center; font-size:clamp(16px,1.5vw,22px); font-weight:800; color:#eef6ff; margin-bottom:10px; text-shadow:0 2px 10px rgba(0,0,0,.22)}
+    .hero{padding:24px; border-radius:34px; background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.08)); border:1px solid rgba(255,255,255,.24); box-shadow:var(--shadow); backdrop-filter:blur(10px)}
+    .menu-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:22px;}
+    .mode-card{min-height:290px; border-radius:32px; padding:24px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; text-align:center; box-shadow: inset 0 3px 0 rgba(255,255,255,.35), inset 0 -8px 0 rgba(0,0,0,.18), 0 18px 28px rgba(0,0,0,.16)}
+    .mode-card .emoji{font-size:88px; filter:drop-shadow(0 10px 18px rgba(0,0,0,.2))}
+    .mode-card h3{margin:0; font-size:clamp(28px,3vw,42px); text-shadow:0 3px 10px rgba(0,0,0,.26)}
+    .mode-btn{width:100%; min-height:74px; border-radius:999px; font-size:28px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.10)); border:1px solid rgba(255,255,255,.22); border-radius:28px; box-shadow:var(--shadow-soft); backdrop-filter:blur(10px); padding:18px}
+    .category{margin-bottom:16px}
+    .category h3{margin:0 0 10px; font-size:28px; text-shadow:0 3px 10px rgba(0,0,0,.2)}
+    .category small{display:block; margin-bottom:10px; color:#f4fbff; opacity:.9; font-size:16px}
+    .checks{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px}
+    .check-item{background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08)); border-radius:18px; padding:10px 12px; display:flex; align-items:flex-start; gap:10px}
+    .check-item input{width:22px; height:22px; margin-top:2px}
+    .check-item label{font-size:18px; font-weight:700; line-height:1.25}
+    .wood{width:fit-content; margin:0 auto 6px; padding:4px 8px; border-radius:14px; background:linear-gradient(180deg,var(--wood1),var(--wood2)); box-shadow:inset 0 2px 0 rgba(255,255,255,.22), inset 0 -3px 0 rgba(0,0,0,.14), var(--shadow-soft)}
+    .wood-inner{background:linear-gradient(180deg, rgba(69,34,6,.45), rgba(45,22,4,.65)); border-radius:12px; padding:6px 10px; min-height:30px; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; font-size:13px; font-weight:900}
+    .settings{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px}
+    .setting-box{background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08)); border-radius:18px; padding:10px}
+    .setting-box label{display:block; font-size:14px; font-weight:800; margin-bottom:6px}
+    .setting-box select, .setting-box input{width:100%; min-height:40px; border:none; border-radius:12px; padding:6px 10px; font-size:16px; font-weight:700}
+    .question-card{padding:14px; text-align:center; margin-bottom:10px}
+    .question-text{font-size:clamp(24px,2.8vw,40px); font-weight:900; line-height:1.32; text-shadow:0 4px 16px rgba(0,0,0,.25)}
+    .blank-slot{display:inline-block; min-width:150px; margin:0 6px; padding:0 4px 2px; border-bottom:4px solid rgba(255,255,255,.95); text-align:center; vertical-align:baseline}
+    .filled-answer{display:inline-block; margin:0 6px; vertical-align:baseline; color:#fff;}
+    .choice-grid{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px}
+    .choice-btn{min-height:74px; border-radius:20px; font-size:22px; padding:10px; background:linear-gradient(180deg,var(--orange1),var(--orange2))}
+    .choice-btn.correct{background:linear-gradient(180deg,var(--green1),var(--green2))!important}
+    .choice-btn.wrong{background:linear-gradient(180deg,var(--red1),var(--red2))!important}
+    .controls{display:flex; justify-content:center; gap:10px; flex-wrap:nowrap; margin:8px 0 6px}
+    .result{min-height:24px; text-align:center; font-size:18px; font-weight:900; color:#fff5aa; margin-top:6px}
+    .layout{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+    .item-btn{width:100%; min-height:74px; border:none; border-radius:22px; margin-bottom:12px; color:#fff; font-size:26px; font-weight:900; cursor:pointer; box-shadow: inset 0 3px 0 rgba(255,255,255,.35), inset 0 -6px 0 rgba(0,0,0,.18), 0 12px 18px rgba(0,0,0,.13); text-shadow:0 2px 6px rgba(0,0,0,.15); padding:14px 18px}
+    .left-item{background:linear-gradient(180deg,var(--orange1),var(--orange2))}
+    .right-item{background:linear-gradient(180deg,var(--blue1),var(--blue2))}
+    .item-btn.selected{outline:4px solid rgba(255,255,255,.7)}
+    .item-btn.correct{background:linear-gradient(180deg,var(--green1),var(--green2))!important}
+    .hint{font-size:18px; text-align:center; opacity:.95; margin-bottom:8px}
+    .hidden{display:none!important}
+    @media (max-width:980px){.menu-grid,.layout{grid-template-columns:1fr}.choice-grid{grid-template-columns:1fr 1fr}.topbar{justify-content:center;flex-wrap:wrap}.left,.right{flex-wrap:wrap}.settings{grid-template-columns:1fr 1fr}}
+    @media (max-width:640px){body{overflow:auto}.app{height:auto;min-height:100%;padding:12px}.screen{height:auto;min-height:calc(100vh - 24px)}.btn,.nav-link{font-size:16px; min-height:42px; padding:8px 12px}.choice-grid{grid-template-columns:1fr 1fr}.choice-btn{font-size:18px; min-height:64px}.question-text{font-size:22px}.settings{grid-template-columns:1fr}.topbar,.left,.right{flex-wrap:wrap;justify-content:center}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="homeScreen" class="screen active">
+      <div class="topbar">
+        <div class="left">
+          <a href="index.html" class="nav-link btn-blue">🏠 Ana Sayfa</a>
+        </div>
+      </div>
+      <div class="hero">
+        <div class="title">Bağlaç Öğrenme Modu</div>
+        <div class="subtitle">Bağlaçlarını seç, sonra oyunla çalış</div>
+        <div class="menu-grid">
+          <div class="mode-card btn-purple">
+            <div class="emoji">📋</div>
+            <h3>Bağlaçları Seç</h3>
+            <button id="openSelectBtn" class="mode-btn btn-purple">Bağlaçları Seç</button>
+          </div>
+          <div class="mode-card btn-green">
+            <div class="emoji">🎮</div>
+            <h3>Oyuna Başla</h3>
+            <button id="startGameBtn" class="mode-btn btn-green">Oyuna Başla</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="selectScreen" class="screen">
+      <div class="topbar">
+        <div class="left">
+          <a href="index.html" class="nav-link btn-blue">🏠 Ana Sayfa</a>
+          <button id="backToHomeBtn" class="btn btn-orange">Geri</button>
+        </div>
+        <div class="right">
+          <button id="selectAllBtn" class="btn btn-green">Hepsini Seç</button>
+          <button id="clearAllBtn" class="btn btn-red">Temizle</button>
+          <button id="saveSelectionBtn" class="btn btn-purple">Kaydet ve Oyuna Dön</button>
+        </div>
+      </div>
+      <div class="title">Bağlaç Seçimi</div>
+      <div class="subtitle">İstediğin bağlaçları işaretle. Oyun sadece bunlarla çalışacak.</div>
+      <div class="panel">
+        <div id="selectionCategories"></div>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div class="topbar">
+        <div class="left">
+          <a href="index.html" class="nav-link btn-blue">🏠 Ana Sayfa</a>
+          <button id="openSelectFromGameBtn" class="btn btn-purple">Bağlaçları Seç</button>
+          <button id="backToGameHomeBtn" class="btn btn-orange">Geri</button>
+        </div>
+        <div class="right">
+          <button id="nextBtn" class="btn btn-blue">Next</button>
+        </div>
+      </div>
+
+      <div class="wood"><div class="wood-inner">
+        <span id="selectedCountText">Seçilen: 0</span>
+        <span>Hak: <span id="lifeText">5</span></span>
+        <span>✅ <span id="correctText">0</span></span>
+        <span>❌ <span id="wrongText">0</span></span>
+      </div></div>
+
+      <div class="title">Bağlaç Seçme Oyunu</div>
+      <div class="subtitle">Boşluğa uygun bağlacı seç</div>
+
+      
+      <div class="settings panel">
+        <div class="setting-box">
+          <label for="autoNextToggle">Otomatik sonraki örnek</label>
+          <select id="autoNextToggle">
+            <option value="on" selected>Açık</option>
+            <option value="off">Kapalı</option>
+          </select>
+        </div>
+        <div class="setting-box">
+          <label for="autoNextDelay">Yeni örnek süresi (sn)</label>
+          <select id="autoNextDelay">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel question-card">
+        <div id="questionText" class="question-text">Soru yükleniyor...</div>
+      </div>
+
+      <div id="choiceGrid" class="choice-grid"></div>
+      <div id="resultText" class="result"></div>
+    </section>
+  </div>
+
+<script>
+const STORAGE_KEY = 'baglac_secimi_v1';
+const conjunctionData = [
+ { key:'deshalb', text:'deshalb', tr:'bu yüzden', category:'pos0', examples:[
+    { prompt:'Ich bin krank. ___ bleibe ich im Bett.', answer:'deshalb', full:'Ich bin krank. Deshalb bleibe ich im Bett.' },
+    { prompt:'Es ist sehr spät. ___ müssen wir jetzt gehen.', answer:'deshalb', full:'Es ist sehr spät. Deshalb müssen wir jetzt gehen.' },
+    { prompt:'Der Kühlschrank ist leer. ___ gehe ich einkaufen.', answer:'deshalb', full:'Der Kühlschrank ist leer. Deshalb gehe ich einkaufen.' },
+    { prompt:'Ich habe mein Passwort vergessen. ___ kann ich mich nicht einloggen.', answer:'deshalb', full:'Ich habe mein Passwort vergessen. Deshalb kann ich mich nicht einloggen.' },
+    { prompt:'Die Prüfung ist wichtig. ___ lerne ich jeden Tag.', answer:'deshalb', full:'Die Prüfung ist wichtig. Deshalb lerne ich jeden Tag.' },
+    { prompt:'Mein Auto ist kaputt. ___ nehme ich heute den Bus.', answer:'deshalb', full:'Mein Auto ist kaputt. Deshalb nehme ich heute den Bus.' },
+    { prompt:'Es regnet stark. ___ nehmen wir einen Regenschirm mit.', answer:'deshalb', full:'Es regnet stark. Deshalb nehmen wir einen Regenschirm mit.' },
+    { prompt:'Ich habe Hunger. ___ koche ich mir eine Suppe.', answer:'deshalb', full:'Ich habe Hunger. Deshalb koche ich mir eine Suppe.' },
+    { prompt:'Wir haben kein Brot mehr. ___ geht er zum Bäcker.', answer:'deshalb', full:'Wir haben kein Brot mehr. Deshalb geht er zum Bäcker.' },
+    { prompt:'Sie möchte gesund leben. ___ macht sie jeden Morgen Sport.', answer:'deshalb', full:'Sie möchte gesund leben. Deshalb macht sie jeden Morgen Sport.' },
+    { prompt:'Der Film ist sehr langweilig. ___ schalte ich den Fernseher aus.', answer:'deshalb', full:'Der Film ist sehr langweilig. Deshalb schalte ich den Fernseher aus.' },
+    { prompt:'Ich habe keine Zeit. ___ kann ich dir leider nicht helfen.', answer:'deshalb', full:'Ich habe keine Zeit. Deshalb kann ich dir leider nicht helfen.' },
+    { prompt:'Das Wetter ist herrlich. ___ machen wir einen Ausflug.', answer:'deshalb', full:'Das Wetter ist herrlich. Deshalb machen wir einen Ausflug.' },
+    { prompt:'Er hat verschlafen. ___ kommt er zu spät zur Arbeit.', answer:'deshalb', full:'Er hat verschlafen. Deshalb kommt er zu spät zur Arbeit.' },
+    { prompt:'Das Restaurant ist voll. ___ müssen wir reservieren.', answer:'deshalb', full:'Das Restaurant ist voll. Deshalb müssen wir reservieren.' },
+    { prompt:'Ich bin sehr müde. ___ trinke ich jetzt einen Kaffee.', answer:'deshalb', full:'Ich bin sehr müde. Deshalb trinke ich jetzt einen Kaffee.' },
+    { prompt:'Die Wohnung ist zu teuer. ___ suchen wir eine neue.', answer:'deshalb', full:'Die Wohnung ist zu teuer. Deshalb suchen wir eine neue.' },
+    { prompt:'Es ist sehr kalt draußen. ___ ziehe ich meine Jacke an.', answer:'deshalb', full:'Es ist sehr kalt draußen. Deshalb ziehe ich meine Jacke an.' },
+    { prompt:'Du hast mir geholfen. ___ danke ich dir sehr.', answer:'deshalb', full:'Du hast mir geholfen. Deshalb danke ich dir sehr.' },
+    { prompt:'Wir haben Urlaub. ___ fliegen wir nach Spanien.', answer:'deshalb', full:'Wir haben Urlaub. Deshalb fliegen wir nach Spanien.' }
+  ]},
+
+
+{ key:'deshalb', text:'deshalb', tr:'bu yüzden', category:'pos0', examples:[
+    { prompt:'Ich bin krank. ___ bleibe ich im Bett.', answer:'deshalb', full:'Ich bin krank. Deshalb bleibe ich im Bett.' },
+    { prompt:'Es ist sehr spät. ___ müssen wir jetzt gehen.', answer:'deshalb', full:'Es ist sehr spät. Deshalb müssen wir jetzt gehen.' },
+    { prompt:'Der Kühlschrank ist leer. ___ gehe ich einkaufen.', answer:'deshalb', full:'Der Kühlschrank ist leer. Deshalb gehe ich einkaufen.' },
+    { prompt:'Ich habe mein Passwort vergessen. ___ kann ich mich nicht einloggen.', answer:'deshalb', full:'Ich habe mein Passwort vergessen. Deshalb kann ich mich nicht einloggen.' },
+    { prompt:'Die Prüfung ist wichtig. ___ lerne ich jeden Tag.', answer:'deshalb', full:'Die Prüfung ist wichtig. Deshalb lerne ich jeden Tag.' },
+    { prompt:'Mein Auto ist kaputt. ___ nehme ich heute den Bus.', answer:'deshalb', full:'Mein Auto ist kaputt. Deshalb nehme ich heute den Bus.' },
+    { prompt:'Es regnet stark. ___ nehmen wir einen Regenschirm mit.', answer:'deshalb', full:'Es regnet stark. Deshalb nehmen wir einen Regenschirm mit.' },
+    { prompt:'Ich habe Hunger. ___ koche ich mir eine Suppe.', answer:'deshalb', full:'Ich habe Hunger. Deshalb koche ich mir eine Suppe.' },
+    { prompt:'Wir haben kein Brot mehr. ___ geht er zum Bäcker.', answer:'deshalb', full:'Wir haben kein Brot mehr. Deshalb geht er zum Bäcker.' },
+    { prompt:'Sie möchte gesund leben. ___ macht sie jeden Morgen Sport.', answer:'deshalb', full:'Sie möchte gesund leben. Deshalb macht sie jeden Morgen Sport.' },
+    { prompt:'Der Film ist sehr langweilig. ___ schalte ich den Fernseher aus.', answer:'deshalb', full:'Der Film ist sehr langweilig. Deshalb schalte ich den Fernseher aus.' },
+    { prompt:'Ich habe keine Zeit. ___ kann ich dir leider nicht helfen.', answer:'deshalb', full:'Ich habe keine Zeit. Deshalb kann ich dir leider nicht helfen.' },
+    { prompt:'Das Wetter ist herrlich. ___ machen wir einen Ausflug.', answer:'deshalb', full:'Das Wetter ist herrlich. Deshalb machen wir einen Ausflug.' },
+    { prompt:'Er hat verschlafen. ___ kommt er zu spät zur Arbeit.', answer:'deshalb', full:'Er hat verschlafen. Deshalb kommt er zu spät zur Arbeit.' },
+    { prompt:'Das Restaurant ist voll. ___ müssen wir reservieren.', answer:'deshalb', full:'Das Restaurant ist voll. Deshalb müssen wir reservieren.' },
+    { prompt:'Ich bin sehr müde. ___ trinke ich jetzt einen Kaffee.', answer:'deshalb', full:'Ich bin sehr müde. Deshalb trinke ich jetzt einen Kaffee.' },
+    { prompt:'Die Wohnung ist zu teuer. ___ suchen wir eine neue.', answer:'deshalb', full:'Die Wohnung ist zu teuer. Deshalb suchen wir eine neue.' },
+    { prompt:'Es ist sehr kalt draußen. ___ ziehe ich meine Jacke an.', answer:'deshalb', full:'Es ist sehr kalt draußen. Deshalb ziehe ich meine Jacke an.' },
+    { prompt:'Du hast mir geholfen. ___ danke ich dir sehr.', answer:'deshalb', full:'Du hast mir geholfen. Deshalb danke ich dir sehr.' },
+    { prompt:'Wir haben Urlaub. ___ fliegen wir nach Spanien.', answer:'deshalb', full:'Wir haben Urlaub. Deshalb fliegen wir nach Spanien.' }
+  ]},
+
+
+{ key:'trotzdem', text:'trotzdem', tr:'buna rağmen', category:'pos0', examples:[
+    { prompt:'Es regnet stark. ___ gehe ich ohne Schirm raus.', answer:'trotzdem', full:'Es regnet stark. Trotzdem gehe ich ohne Schirm raus.' },
+    { prompt:'Er ist sehr müde. ___ arbeitet er bis spät in die Nacht.', answer:'trotzdem', full:'Er ist sehr müde. Trotzdem arbeitet er bis spät in die Nacht.' },
+    { prompt:'Das Auto ist alt. ___ fährt es noch sehr gut.', answer:'trotzdem', full:'Das Auto ist alt. Trotzdem fährt es noch sehr gut.' },
+    { prompt:'Ich habe wenig Geld. ___ kaufe ich mir dieses Buch.', answer:'trotzdem', full:'Ich habe wenig Geld. Trotzdem kaufe ich mir dieses Buch.' },
+    { prompt:'Die Prüfung war schwer. ___ hat sie eine gute Note bekommen.', answer:'trotzdem', full:'Die Prüfung war schwer. Trotzdem hat sie eine gute Note bekommen.' },
+    { prompt:'Es ist eiskalt draußen. ___ essen die Kinder ein Eis.', answer:'trotzdem', full:'Es ist eiskalt draußen. Trotzdem essen die Kinder ein Eis.' },
+    { prompt:'Ich habe keine Lust. ___ komme ich zu deiner Party.', answer:'trotzdem', full:'Ich habe keine Lust. Trotzdem komme ich zu deiner Party.' },
+    { prompt:'Der Film hat schlechte Kritiken. ___ möchte ich ihn sehen.', answer:'trotzdem', full:'Der Film hat schlechte Kritiken. Trotzdem möchte ich ihn sehen.' },
+    { prompt:'Er hat keine Erfahrung. ___ hat er den Job bekommen.', answer:'trotzdem', full:'Er hat keine Erfahrung. Trotzdem hat er den Job bekommen.' },
+    { prompt:'Ich bin satt. ___ esse ich noch ein Stück Kuchen.', answer:'trotzdem', full:'Ich bin satt. Trotzdem esse ich noch ein Stück Kuchen.' },
+    { prompt:'Die Sonne scheint nicht. ___ ist es sehr warm.', answer:'trotzdem', full:'Die Sonne scheint nicht. Trotzdem ist es sehr warm.' },
+    { prompt:'Wir haben uns gestritten. ___ helfen wir uns gegenseitig.', answer:'trotzdem', full:'Wir haben uns gestritten. Trotzdem helfen wir uns gegenseitig.' },
+    { prompt:'Das Handy ist teuer. ___ kaufen es viele Leute.', answer:'trotzdem', full:'Das Handy ist teuer. Trotzdem kaufen es viele Leute.' },
+    { prompt:'Ich verstehe die Grammatik nicht. ___ versuche ich zu sprechen.', answer:'trotzdem', full:'Ich verstehe die Grammatik nicht. Trotzdem versuche ich zu sprechen.' },
+    { prompt:'Es ist schon spät. ___ rufe ich meine Mutter an.', answer:'trotzdem', full:'Es ist schon spät. Trotzdem rufe ich meine Mutter an.' },
+    { prompt:'Der Weg ist weit. ___ gehen wir zu Fuß.', answer:'trotzdem', full:'Der Weg ist weit. Trotzdem gehen wir zu Fuß.' },
+    { prompt:'Ich habe Angst. ___ springe ich ins Wasser.', answer:'trotzdem', full:'Ich habe Angst. Trotzdem springe ich ins Wasser.' },
+    { prompt:'Das Essen schmeckt nicht besonders. ___ isst er alles auf.', answer:'trotzdem', full:'Das Essen schmeckt nicht besonders. Trotzdem isst er alles auf.' },
+    { prompt:'Er ist krank. ___ geht er heute zur Arbeit.', answer:'trotzdem', full:'Er ist krank. Trotzdem geht er heute zur Arbeit.' },
+    { prompt:'Die Musik ist laut. ___ schläft das Baby tief.', answer:'trotzdem', full:'Die Musik ist laut. Trotzdem schläft das Baby tief.' }
+  ]},
+
+
+{ key:'dann', text:'dann', tr:'sonra', category:'pos0', examples:[
+    { prompt:'Zuerst räume ich auf, ___ mache ich Pause.', answer:'dann', full:'Zuerst räume ich auf, dann mache ich Pause.' },
+    { prompt:'Ich trinke einen Tee, ___ gehe ich schlafen.', answer:'dann', full:'Ich trinke einen Tee, dann gehe ich schlafen.' },
+    { prompt:'Wir gehen erst einkaufen, ___ kochen wir.', answer:'dann', full:'Wir gehen erst einkaufen, dann kochen wir.' },
+    { prompt:'Mach zuerst deine Hausaufgaben, ___ darfst du spielen.', answer:'dann', full:'Mach zuerst deine Hausaufgaben, dann darfst du spielen.' },
+    { prompt:'Ich dusche mich, ___ ziehe ich mich an.', answer:'dann', full:'Ich dusche mich, dann ziehe ich mich an.' },
+    { prompt:'Zuerst besuchen wir Berlin, ___ fahren wir nach Hamburg.', answer:'dann', full:'Zuerst besuchen wir Berlin, dann fahren wir nach Hamburg.' },
+    { prompt:'Komm bitte rein, ___ besprechen wir alles.', answer:'dann', full:'Komm bitte rein, dann besprechen wir alles.' },
+    { prompt:'Ich lese noch ein Kapitel, ___ schalte ich das Licht aus.', answer:'dann', full:'Ich lese noch ein Kapitel, dann schalte ich das Licht aus.' },
+    { prompt:'Iss erst dein Gemüse, ___ bekommst du Nachtisch.', answer:'dann', full:'Iss erst dein Gemüse, dann bekommst du Nachtisch.' },
+    { prompt:'Wir treffen uns um acht, ___ gehen wir ins Kino.', answer:'dann', full:'Wir treffen uns um acht, dann gehen wir ins Kino.' },
+    { prompt:'Zuerst die Arbeit, ___ das Vergnügen.', answer:'dann', full:'Zuerst die Arbeit, dann das Vergnügen.' },
+    { prompt:'Ich hole dich ab, ___ fahren wir gemeinsam los.', answer:'dann', full:'Ich hole dich ab, dann fahren wir gemeinsam los.' },
+    { prompt:'Lies die Anleitung, ___ baue den Schrank zusammen.', answer:'dann', full:'Lies die Anleitung, dann baue den Schrank zusammen.' },
+    { prompt:'Wir schauen uns die Wohnung an, ___ entscheiden wir uns.', answer:'dann', full:'Wir schauen uns die Wohnung an, dann entscheiden wir uns.' },
+    { prompt:'Ich wasche das Geschirr, ___ trockne ich es ab.', answer:'dann', full:'Ich wasche das Geschirr, dann trockne ich es ab.' },
+    { prompt:'Warte auf mich, ___ gehen wir zusammen.', answer:'dann', full:'Warte auf mich, dann gehen wir zusammen.' },
+    { prompt:'Trink erst etwas Wasser, ___ nimm die Tablette.', answer:'dann', full:'Trink erst etwas Wasser, dann nimm die Tablette.' },
+    { prompt:'Zuerst lerne ich Vokabeln, ___ übe ich die Grammatik.', answer:'dann', full:'Zuerst lerne ich Vokabeln, dann übe ich die Grammatik.' },
+    { prompt:'Schreib die E-Mail, ___ schick sie ab.', answer:'dann', full:'Schreib die E-Mail, dann schick sie ab.' },
+    { prompt:'Ich mache Sport, ___ fühle ich mich besser.', answer:'dann', full:'Ich mache Sport, dann fühle ich mich besser.' }
+  ]},
+
+
+{ key:'außerdem', text:'außerdem', tr:'ayrıca', category:'pos0', examples:[
+    { prompt:'Ich lerne Deutsch. ___ spreche ich gut Englisch.', answer:'außerdem', full:'Ich lerne Deutsch. Außerdem spreche ich gut Englisch.' },
+    { prompt:'Das Hotel war teuer. ___ war es sehr laut.', answer:'außerdem', full:'Das Hotel war teuer. Außerdem war es sehr laut.' },
+    { prompt:'Ich habe keine Zeit. ___ habe ich keine Lust.', answer:'außerdem', full:'Ich habe keine Zeit. Außerdem habe ich keine Lust.' },
+    { prompt:'Das Handy ist modern. ___ hat es eine tolle Kamera.', answer:'außerdem', full:'Das Handy ist modern. Außerdem hat es eine tolle Kamera.' },
+    { prompt:'Sie ist sehr nett. ___ ist sie sehr hilfsbereit.', answer:'außerdem', full:'Sie ist sehr nett. Außerdem ist sie sehr hilfsbereit.' },
+    { prompt:'Wir müssen Brot kaufen. ___ brauchen wir Milch.', answer:'außerdem', full:'Wir müssen Brot kaufen. Außerdem brauchen wir Milch.' },
+    { prompt:'Der Film war lang. ___ war die Handlung kompliziert.', answer:'außerdem', full:'Der Film war lang. Außerdem war die Handlung kompliziert.' },
+    { prompt:'Er spielt Fußball. ___ geht er oft schwimmen.', answer:'außerdem', full:'Er spielt Fußball. Außerdem geht er oft schwimmen.' },
+    { prompt:'Die Wohnung ist groß. ___ liegt sie im Zentrum.', answer:'außerdem', full:'Die Wohnung ist groß. Außerdem liegt sie im Zentrum.' },
+    { prompt:'Ich mag Pizza. ___ liebe ich italienisches Eis.', answer:'außerdem', full:'Ich mag Pizza. Außerdem liebe ich italienisches Eis.' },
+    { prompt:'Es regnet heute. ___ ist es sehr windig.', answer:'außerdem', full:'Es regnet heute. Außerdem ist es sehr windig.' },
+    { prompt:'Du musst den Müll rausbringen. ___ sollst du die Küche putzen.', answer:'außerdem', full:'Du musst den Müll rausbringen. Außerdem sollst du die Küche putzen.' },
+    { prompt:'Das Auto ist alt. ___ verbraucht es viel Benzin.', answer:'außerdem', full:'Das Auto ist alt. Außerdem verbraucht es viel Benzin.' },
+    { prompt:'Wir haben heute ein Meeting. ___ kommt ein neuer Kollege.', answer:'außerdem', full:'Wir haben heute ein Meeting. Außerdem kommt ein neuer Kollege.' },
+    { prompt:'Ich habe Kopfschmerzen. ___ fühle ich mich erkältet.', answer:'außerdem', full:'Ich habe Kopfschmerzen. Außerdem fühle ich mich erkältet.' },
+    { prompt:'Der Garten ist schön. ___ gibt es dort viele Blumen.', answer:'außerdem', full:'Der Garten ist schön. Außerdem gibt es dort viele Blumen.' },
+    { prompt:'Er arbeitet als Lehrer. ___ schreibt er Bücher.', answer:'außerdem', full:'Er arbeitet als Lehrer. Außerdem schreibt er Bücher.' },
+    { prompt:'Die Prüfung war schwer. ___ hatte ich wenig Zeit.', answer:'außerdem', full:'Die Prüfung war schwer. Außerdem hatte ich wenig Zeit.' },
+    { prompt:'Ich trinke gerne Tee. ___ mag ich frischen Saft.', answer:'außerdem', full:'Ich trinke gerne Tee. Außerdem mag ich frischen Saft.' },
+    { prompt:'Das Ticket ist gültig. ___ ist es übertragbar.', answer:'außerdem', full:'Das Ticket ist gültig. Außerdem ist es übertragbar.' }
+  ]},
+
+
+{ key:'jedoch', text:'jedoch', tr:'ancak', category:'pos0', examples:[
+    { prompt:'Die Wohnung ist schön. ___ ist sie zu teuer.', answer:'jedoch', full:'Die Wohnung ist schön. Jedoch ist sie zu teuer.' },
+    { prompt:'Er will kommen. ___ hat er keine Zeit.', answer:'jedoch', full:'Er will kommen. Jedoch hat er keine Zeit.' },
+    { prompt:'Das Projekt ist gut. ___ fehlt uns das Geld.', answer:'jedoch', full:'Das Projekt ist gut. Jedoch fehlt uns das Geld.' },
+    { prompt:'Ich mag Sport. ___ gehe ich nicht gerne joggen.', answer:'jedoch', full:'Ich mag Sport. Jedoch gehe ich nicht gerne joggen.' },
+    { prompt:'Wir haben gesucht. ___ haben wir nichts gefunden.', answer:'jedoch', full:'Wir haben gesucht. Jedoch haben wir nichts gefunden.' },
+    { prompt:'Der Wein ist lecker. ___ ist er sehr stark.', answer:'jedoch', full:'Der Wein ist lecker. Jedoch ist er sehr stark.' },
+    { prompt:'Sie lernt viel. ___ macht sie noch viele Fehler.', answer:'jedoch', full:'Sie lernt viel. Jedoch macht sie noch viele Fehler.' },
+    { prompt:'Das Wetter ist sonnig. ___ ist es sehr windig.', answer:'jedoch', full:'Das Wetter ist sonnig. Jedoch ist es sehr windig.' },
+    { prompt:'Er ist intelligent. ___ ist er manchmal unpünktlich.', answer:'jedoch', full:'Er ist intelligent. Jedoch ist er manchmal unpünktlich.' },
+    { prompt:'Ich verstehe dich. ___ kann ich dir nicht zustimmen.', answer:'jedoch', full:'Ich verstehe dich. Jedoch kann ich dir nicht zustimmen.' },
+    { prompt:'Das Auto ist schnell. ___ verbraucht es viel Benzin.', answer:'jedoch', full:'Das Auto ist schnell. Jedoch verbraucht es viel Benzin.' },
+    { prompt:'Wir wollten gehen. ___ hat es angefangen zu regnen.', answer:'jedoch', full:'Wir wollten gehen. Jedoch hat es angefangen zu regnen.' },
+    { prompt:'Die Prüfung war kurz. ___ war sie sehr kompliziert.', answer:'jedoch', full:'Die Prüfung war kurz. Jedoch war sie sehr kompliziert.' },
+    { prompt:'Ich habe angerufen. ___ hat niemand geantwortet.', answer:'jedoch', full:'Ich habe angerufen. Jedoch hat niemand geantwortet.' },
+    { prompt:'Das Hotel ist modern. ___ liegt es direkt an der Autobahn.', answer:'jedoch', full:'Das Hotel ist modern. Jedoch liegt es direkt an der Autobahn.' },
+    { prompt:'Er spricht fließend. ___ hat er einen starken Akzent.', answer:'jedoch', full:'Er spricht fließend. Jedoch hat er einen starken Akzent.' },
+    { prompt:'Die Musik ist toll. ___ ist sie viel zu laut.', answer:'jedoch', full:'Die Musik ist toll. Jedoch ist sie viel zu laut.' },
+    { prompt:'Ich habe Hunger. ___ möchte ich jetzt nichts essen.', answer:'jedoch', full:'Ich habe Hunger. Jedoch möchte ich jetzt nichts essen.' },
+    { prompt:'Der Plan ist fertig. ___ müssen wir ihn noch prüfen.', answer:'jedoch', full:'Der Plan ist fertig. Jedoch müssen wir ihn noch prüfen.' },
+    { prompt:'Sie ist glücklich. ___ vermisst sie ihre Familie.', answer:'jedoch', full:'Sie ist glücklich. Jedoch vermisst sie ihre Familie.' }
+  ]},
+
+
+{ key:'sonst', text:'sonst', tr:'yoksa / aksi takdirde', category:'pos0', examples:[
+    { prompt:'Beeil dich, ___ verpassen wir den Zug.', answer:'sonst', full:'Beeil dich, sonst verpassen wir den Zug.' },
+    { prompt:'Du musst lernen, ___ bestehst du die Prüfung nicht.', answer:'sonst', full:'Du musst lernen, sonst bestehst du die Prüfung nicht.' },
+    { prompt:'Zieh dir eine Jacke an, ___ erkältest du dich.', answer:'sonst', full:'Zieh dir eine Jacke an, sonst erkältest du dich.' },
+    { prompt:'Wir müssen jetzt gehen, ___ kommen wir zu spät.', answer:'sonst', full:'Wir müssen jetzt gehen, sonst kommen wir zu spät.' },
+    { prompt:'Iss jetzt etwas, ___ bekommst du später Hunger.', answer:'sonst', full:'Iss jetzt etwas, sonst bekommst du später Hunger.' },
+    { prompt:'Lies die Anleitung genau, ___ machst du einen Fehler.', answer:'sonst', full:'Lies die Anleitung genau, sonst machst du einen Fehler.' },
+    { prompt:'Sei bitte leise, ___ weckst du das Baby auf.', answer:'sonst', full:'Sei bitte leise, sonst weckst du das Baby auf.' },
+    { prompt:'Du musst tanken, ___ bleibt das Auto stehen.', answer:'sonst', full:'Du musst tanken, sonst bleibt das Auto stehen.' },
+    { prompt:'Trink viel Wasser, ___ bekommst du Kopfschmerzen.', answer:'sonst', full:'Trink viel Wasser, sonst bekommst du Kopfschmerzen.' },
+    { prompt:'Schreib es dir auf, ___ vergisst du es wieder.', answer:'sonst', full:'Schreib es dir auf, sonst vergisst du es wieder.' },
+    { prompt:'Wir brauchen eine Reservierung, ___ bekommen wir keinen Tisch.', answer:'sonst', full:'Wir brauchen eine Reservierung, sonst bekommen wir keinen Tisch.' },
+    { prompt:'Fahr vorsichtig, ___ passiert ein Unfall.', answer:'sonst', full:'Fahr vorsichtig, sonst passiert ein Unfall.' },
+    { prompt:'Putz dir die Zähne, ___ bekommst du Karies.', answer:'sonst', full:'Putz dir die Zähne, sonst bekommst du Karies.' },
+    { prompt:'Speichere die Datei, ___ ist deine Arbeit weg.', answer:'sonst', full:'Speichere die Datei, sonst ist deine Arbeit weg.' },
+    { prompt:'Komm pünktlich, ___ fangen wir ohne dich an.', answer:'sonst', full:'Komm pünktlich, sonst fangen wir ohne dich an.' },
+    { prompt:'Du musst den Müll rausbringen, ___ stinkt die Küche.', answer:'sonst', full:'Du musst den Müll rausbringen, sonst stinkt die Küche.' },
+    { prompt:'Antworte schnell, ___ ist das Angebot nicht mehr gültig.', answer:'sonst', full:'Antworte schnell, sonst ist das Angebot nicht mehr gültig.' },
+    { prompt:'Geh zum Arzt, ___ wird die Krankheit schlimmer.', answer:'sonst', full:'Geh zum Arzt, sonst wird die Krankheit schlimmer.' },
+    { prompt:'Wir müssen sparen, ___ haben wir am Ende des Monats kein Geld.', answer:'sonst', full:'Wir müssen sparen, sonst haben wir am Ende des Monats kein Geld.' },
+    { prompt:'Hör gut zu, ___ verstehst du die Aufgabe nicht.', answer:'sonst', full:'Hör gut zu, sonst verstehst du die Aufgabe nicht.' }
+  ]},
+
+  { key:'allerdings', text:'allerdings', tr:'gerçi / doğrusu / ama', category:'pos0', examples:[
+    { prompt:'Ich komme gerne mit. ___ habe ich erst ab 18 Uhr Zeit.', answer:'allerdings', full:'Ich komme gerne mit. Allerdings habe ich erst ab 18 Uhr Zeit.' },
+    { prompt:'Das Hotel ist sehr schön. ___ ist es auch sehr teuer.', answer:'allerdings', full:'Das Hotel ist sehr schön. Allerdings ist es auch sehr teuer.' },
+    { prompt:'Er spricht gut Deutsch. ___ macht er noch viele Fehler.', answer:'allerdings', full:'Er spricht gut Deutsch. Allerdings macht er noch viele Fehler.' },
+    { prompt:'Wir können morgen grillen. ___ muss das Wetter mitspielen.', answer:'allerdings', full:'Wir können morgen grillen. Allerdings muss das Wetter mitspielen.' },
+    { prompt:'Die Prüfung war nicht schwer. ___ war ich sehr nervös.', answer:'allerdings', full:'Die Prüfung war nicht schwer. Allerdings war ich sehr nervös.' },
+    { prompt:'Ich esse gerne Pizza. ___ mag ich keinen Fisch darauf.', answer:'allerdings', full:'Ich esse gerne Pizza. Allerdings mag ich keinen Fisch darauf.' },
+    { prompt:'Das Auto ist schnell. ___ verbraucht es viel Benzin.', answer:'allerdings', full:'Das Auto ist schnell. Allerdings verbraucht es viel Benzin.' },
+    { prompt:'Du kannst mein Fahrrad leihen. ___ brauche ich es morgen zurück.', answer:'allerdings', full:'Du kannst mein Fahrrad leihen. Allerdings brauche ich es morgen zurück.' },
+    { prompt:'Die Wohnung liegt zentral. ___ ist es dort sehr laut.', answer:'allerdings', full:'Die Wohnung liegt zentral. Allerdings ist es dort sehr laut.' },
+    { prompt:'Ich helfe dir gerne. ___ musst du mir vorher alles erklären.', answer:'allerdings', full:'Ich helfe dir gerne. Allerdings musst du mir vorher alles erklären.' },
+    { prompt:'Das neue Handy ist toll. ___ ist der Akku schnell leer.', answer:'allerdings', full:'Das neue Handy ist toll. Allerdings ist der Akku schnell leer.' },
+    { prompt:'Wir haben gewonnen. ___ war das Spiel sehr anstrengend.', answer:'allerdings', full:'Wir haben gewonnen. Allerdings war das Spiel sehr anstrengend.' },
+    { prompt:'Er ist ein guter Koch. ___ braucht er immer sehr lange.', answer:'allerdings', full:'Er ist ein guter Koch. Allerdings braucht er immer sehr lange.' },
+    { prompt:'Ich verstehe deine Meinung. ___ sehe ich das etwas anders.', answer:'allerdings', full:'Ich verstehe deine Meinung. Allerdings sehe ich das etwas anders.' },
+    { prompt:'Der Film war interessant. ___ war er viel zu lang.', answer:'allerdings', full:'Der Film war interessant. Allerdings war er viel zu lang.' },
+    { prompt:'Du hast recht. ___ darfst du nicht so unhöflich sein.', answer:'allerdings', full:'Du hast recht. Allerdings darfst du nicht so unhöflich sein.' },
+    { prompt:'Das Wetter ist sonnig. ___ weht ein kalter Wind.', answer:'allerdings', full:'Das Wetter ist sonnig. Allerdings weht ein kalter Wind.' },
+    { prompt:'Ich trinke Kaffee. ___ nehme ich ihn nur mit viel Milch.', answer:'allerdings', full:'Ich trinke Kaffee. Allerdings nehme ich ihn nur mit viel Milch.' },
+    { prompt:'Die Reise war schön. ___ hatten wir Pech mit dem Hotel.', answer:'allerdings', full:'Die Reise war schön. Allerdings hatten wir Pech mit dem Hotel.' },
+    { prompt:'Sie ist sehr nett. ___ kann sie manchmal streng sein.', answer:'allerdings', full:'Sie ist sehr nett. Allerdings kann sie manchmal streng sein.' }
+  ]},
+
+  { key:'also', text:'also', tr:'yani / o halde', category:'pos0', examples:[
+    { prompt:'Ich habe heute frei. ___ bleibe ich zu Hause.', answer:'also', full:'Ich habe heute frei. Also bleibe ich zu Hause.' },
+    { prompt:'Du hast Hunger. ___ essen wir jetzt etwas.', answer:'also', full:'Du hast Hunger. Also essen wir jetzt etwas.' },
+    { prompt:'Es gibt keinen Bus mehr. ___ nehmen wir ein Taxi.', answer:'also', full:'Es gibt keinen Bus mehr. Also nehmen wir ein Taxi.' },
+    { prompt:'Die Prüfung ist morgen. ___ musst du heute lernen.', answer:'also', full:'Die Prüfung ist morgen. Also musst du heute lernen.' },
+    { prompt:'Ich habe kein Geld dabei. ___ kannst du bitte bezahlen?', answer:'also', full:'Ich habe kein Geld dabei. Also kannst du bitte bezahlen?' },
+    { prompt:'Es regnet draußen. ___ nehmen wir den Regenschirm.', answer:'also', full:'Es regnet draußen. Also nehmen wir den Regenschirm.' },
+    { prompt:'Der Film fängt gleich an. ___ müssen wir uns beeilen.', answer:'also', full:'Der Film fängt gleich an. Also müssen wir uns beeilen.' },
+    { prompt:'Ich bin sehr müde. ___ gehe ich jetzt schlafen.', answer:'also', full:'Ich bin sehr müde. Also gehe ich jetzt schlafen.' },
+    { prompt:'Du hast die Schlüssel. ___ kannst du die Tür öffnen.', answer:'also', full:'Du hast die Schlüssel. Also kannst du die Tür öffnen.' },
+    { prompt:'Das Auto ist kaputt. ___ fahren wir mit dem Zug.', answer:'also', full:'Das Auto ist kaputt. Also fahren wir mit dem Zug.' },
+    { prompt:'Es ist Sonntag. ___ haben die Geschäfte zu.', answer:'also', full:'Es ist Sonntag. Also haben die Geschäfte zu.' },
+    { prompt:'Ich verstehe die Aufgabe nicht. ___ frage ich den Lehrer.', answer:'also', full:'Ich verstehe die Aufgabe nicht. Also frage ich den Lehrer.' },
+    { prompt:'Wir haben kein Brot mehr. ___ gehe ich zum Bäcker.', answer:'also', full:'Wir haben kein Brot mehr. Also gehe ich zum Bäcker.' },
+    { prompt:'Die Sonne scheint. ___ gehen wir im Park spazieren.', answer:'also', full:'Die Sonne scheint. Also gehen wir im Park spazieren.' },
+    { prompt:'Du bist krank. ___ bleibst du heute im Bett.', answer:'also', full:'Du bist krank. Also bleibst du heute im Bett.' },
+    { prompt:'Ich habe die Prüfung bestanden. ___ bin ich sehr glücklich.', answer:'also', full:'Ich habe die Prüfung bestanden. Also bin ich sehr glücklich.' },
+    { prompt:'Das Handy ist zu teuer. ___ kaufe ich es nicht.', answer:'also', full:'Das Handy ist zu teuer. Also kaufe ich es nicht.' },
+    { prompt:'Wir sind fertig mit der Arbeit. ___ können wir gehen.', answer:'also', full:'Wir sind fertig mit der Arbeit. Also können wir gehen.' },
+    { prompt:'Ich habe Durst. ___ trinke ich ein Glas Wasser.', answer:'also', full:'Ich habe Durst. Also trinke ich ein Glas Wasser.' },
+    { prompt:'Es ist schon 22 Uhr. ___ machen wir das Licht aus.', answer:'also', full:'Es ist schon 22 Uhr. Also machen wir das Licht aus.' }
+  ]},
+
+  { key:'dagegen', text:'dagegen', tr:'buna karşılık / oysa', category:'pos0', examples:[
+    { prompt:'Ich mag Tee. Mein Bruder ___ trinkt nur Kaffee.', answer:'dagegen', full:'Ich mag Tee. Mein Bruder dagegen trinkt nur Kaffee.' },
+    { prompt:'Heute ist es sonnig. Gestern ___ hat es den ganzen Tag geregnet.', answer:'dagegen', full:'Heute ist es sonnig. Gestern dagegen hat es den ganzen Tag geregnet.' },
+    { prompt:'Hunde sind oft laut. Katzen ___ sind meistens sehr leise.', answer:'dagegen', full:'Hunde sind oft laut. Katzen dagegen sind meistens sehr leise.' },
+    { prompt:'Im Sommer ist es heiß. Im Winter ___ ist es eiskalt.', answer:'dagegen', full:'Im Sommer ist es heiß. Im Winter dagegen ist es eiskalt.' },
+    { prompt:'Erdbeeren sind süß. Zitronen ___ sind sehr sauer.', answer:'dagegen', full:'Erdbeeren sind süß. Zitronen dagegen sind sehr sauer.' },
+    { prompt:'Er arbeitet sehr viel. Seine Schwester ___ faulenzt den ganzen Tag.', answer:'dagegen', full:'Er arbeitet sehr viel. Seine Schwester dagegen faulenzt den ganzen Tag.' },
+    { prompt:'Dieses Auto ist teuer. Das andere ___ ist ein echtes Schnäppchen.', answer:'dagegen', full:'Dieses Auto ist teuer. Das andere dagegen ist ein echtes Schnäppchen.' },
+    { prompt:'In der Stadt ist es laut. Auf dem Land ___ ist es herrlich ruhig.', answer:'dagegen', full:'In der Stadt ist es laut. Auf dem Land dagegen ist es herrlich ruhig.' },
+    { prompt:'Mathe finde ich schwierig. Deutsch ___ fällt mir sehr leicht.', answer:'dagegen', full:'Mathe finde ich schwierig. Deutsch dagegen fällt mir sehr leicht.' },
+    { prompt:'Früher war alles anders. Heute ___ haben wir das Internet.', answer:'dagegen', full:'Früher war alles anders. Heute dagegen haben wir das Internet.' },
+    { prompt:'Ich bin sehr groß. Meine Eltern ___ sind eher klein.', answer:'dagegen', full:'Ich bin sehr groß. Meine Eltern dagegen sind eher klein.' },
+    { prompt:'Actionfilme sind spannend. Komödien ___ sind lustig.', answer:'dagegen', full:'Actionfilme sind spannend. Komödien dagegen sind lustig.' },
+    { prompt:'Brot ist gesund. Kuchen ___ enthält viel Zucker.', answer:'dagegen', full:'Brot ist gesund. Kuchen dagegen enthält viel Zucker.' },
+    { prompt:'Thomas ist sehr sportlich. Sein Freund ___ sitzt nur vor dem Computer.', answer:'dagegen', full:'Thomas ist sehr sportlich. Sein Freund dagegen sitzt nur vor dem Computer.' },
+    { prompt:'Ein Flugzeug ist schnell. Ein Zug ___ ist langsamer, aber gemütlicher.', answer:'dagegen', full:'Ein Flugzeug ist schnell. Ein Zug dagegen ist langsamer, aber gemütlicher.' },
+    { prompt:'Ich trinke meinen Kaffee schwarz. Du ___ nimmst viel Milch.', answer:'dagegen', full:'Ich trinke meinen Kaffee schwarz. Du dagegen nimmst viel Milch.' },
+    { prompt:'In Spanien ist es warm. In Norwegen ___ schneit es oft.', answer:'dagegen', full:'In Spanien ist es warm. In Norwegen dagegen schneit es oft.' },
+    { prompt:'Dieses Handy hat eine gute Kamera. Jenes ___ hat einen besseren Akku.', answer:'dagegen', full:'Dieses Handy hat eine gute Kamera. Jenes dagegen hat einen besseren Akku.' },
+    { prompt:'Ich koche gerne. Mein Mann ___ geht lieber im Restaurant essen.', answer:'dagegen', full:'Ich koche gerne. Mein Mann dagegen geht lieber im Restaurant essen.' },
+    { prompt:'Tagsüber ist es hell. Nachts ___ ist es dunkel.', answer:'dagegen', full:'Tagsüber ist es hell. Nachts dagegen ist es dunkel.' }
+  ]},
+
+  { key:'danach', text:'danach', tr:'ondan sonra', category:'pos0', examples:[
+    { prompt:'Zuerst frühstücken wir. ___ gehen wir spazieren.', answer:'danach', full:'Zuerst frühstücken wir. Danach gehen wir spazieren.' },
+    { prompt:'Ich mache meine Hausaufgaben. ___ sehe ich fern.', answer:'danach', full:'Ich mache meine Hausaufgaben. Danach sehe ich fern.' },
+    { prompt:'Wir gehen erst einkaufen. ___ kochen wir gemeinsam.', answer:'danach', full:'Wir gehen erst einkaufen. Danach kochen wir gemeinsam.' },
+    { prompt:'Lies zuerst den Text. ___ beantworte die Fragen.', answer:'danach', full:'Lies zuerst den Text. Danach beantworte die Fragen.' },
+    { prompt:'Ich dusche mich kurz. ___ fühle ich mich besser.', answer:'danach', full:'Ich dusche mich kurz. Danach fühle ich mich besser.' },
+    { prompt:'Wir besuchen das Museum. ___ gehen wir in ein Café.', answer:'danach', full:'Wir besuchen das Museum. Danach gehen wir in ein Café.' },
+    { prompt:'Zuerst wasche ich das Gemüse. ___ schneide ich es.', answer:'danach', full:'Zuerst wasche ich das Gemüse. Danach schneide ich es.' },
+    { prompt:'Ich rufe meine Mutter an. ___ fahre ich zu dir.', answer:'danach', full:'Ich rufe meine Mutter an. Danach fahre ich zu dir.' },
+    { prompt:'Trink zuerst diesen Tee. ___ geht es dir sicher besser.', answer:'danach', full:'Trink zuerst diesen Tee. Danach geht es dir sicher besser.' },
+    { prompt:'Wir schauen den Film. ___ gehen wir schlafen.', answer:'danach', full:'Wir schauen den Film. Danach gehen wir schlafen.' },
+    { prompt:'Räum bitte dein Zimmer auf. ___ darfst du spielen.', answer:'danach', full:'Räum bitte dein Zimmer auf. Danach darfst du spielen.' },
+    { prompt:'Zuerst kommt der Frühling. ___ folgt der Sommer.', answer:'danach', full:'Zuerst kommt der Frühling. Danach folgt der Sommer.' },
+    { prompt:'Ich beende meine Arbeit. ___ habe ich endlich Freizeit.', answer:'danach', full:'Ich beende meine Arbeit. Danach habe ich endlich Freizeit.' },
+    { prompt:'Wir essen zu Abend. ___ gehen wir noch eine Runde spazieren.', answer:'danach', full:'Wir essen zu Abend. Danach gehen wir noch eine Runde spazieren.' },
+    { prompt:'Zuerst lernst du die Vokabeln. ___ übst du die Grammatik.', answer:'danach', full:'Zuerst lernst du die Vokabeln. Danach übst du die Grammatik.' },
+    { prompt:'Mische den Teig gut. ___ backe den Kuchen für 30 Minuten.', answer:'danach', full:'Mische den Teig gut. Danach backe den Kuchen für 30 Minuten.' },
+    { prompt:'Ich parke das Auto. ___ komme ich sofort hoch.', answer:'danach', full:'Ich parke das Auto. Danach komme ich sofort hoch.' },
+    { prompt:'Hör dir das Lied an. ___ sag mir deine Meinung.', answer:'danach', full:'Hör dir das Lied an. Danach sag mir deine Meinung.' },
+    { prompt:'Zuerst füllen wir das Formular aus. ___ geben wir es ab.', answer:'danach', full:'Zuerst füllen wir das Formular aus. Danach geben wir es ab.' },
+    { prompt:'Ich mache Sport. ___ nehme ich eine kalte Dusche.', answer:'danach', full:'Ich mache Sport. Danach nehme ich eine kalte Dusche.' }
+  ]},
+
+
+  { key:'genauso', text:'genauso', tr:'aynı şekilde / tıpkı ... gibi', category:'pos0', examples:[
+    { prompt:'Erdbeeren sind süß. ___ schmecken reife Kirschen.', answer:'genauso', full:'Erdbeeren sind süß. Genauso schmecken reife Kirschen.' },
+    { prompt:'Er läuft sehr schnell. ___ rennt sein großer Hund.', answer:'genauso', full:'Er läuft sehr schnell. Genauso rennt sein großer Hund.' },
+    { prompt:'Mathe ist schwierig. ___ finde ich Physik kompliziert.', answer:'genauso', full:'Mathe ist schwierig. Genauso finde ich Physik kompliziert.' },
+    { prompt:'Berlin ist lebendig. ___ erlebe ich Hamburg.', answer:'genauso', full:'Berlin ist lebendig. Genauso erlebe ich Hamburg.' },
+    { prompt:'Ich liebe Pizza. ___ mag ich italienische Pasta.', answer:'genauso', full:'Ich liebe Pizza. Genauso mag ich italienische Pasta.' },
+    { prompt:'Du bist müde. ___ fühle ich mich heute auch.', answer:'genauso', full:'Du bist müde. Genauso fühle ich mich heute auch.' },
+    { prompt:'Das erste Buch war spannend. ___ ist der zweite Teil.', answer:'genauso', full:'Das erste Buch war spannend. Genauso ist der zweite Teil.' },
+    { prompt:'Sie arbeitet fleißig. ___ lernt sie für die Prüfung.', answer:'genauso', full:'Sie arbeitet fleißig. Genauso lernt sie für die Prüfung.' },
+    { prompt:'Kaffee macht mich wach. ___ wirkt ein starker Tee.', answer:'genauso', full:'Kaffee macht mich wach. Genauso wirkt ein starker Tee.' },
+    { prompt:'Im Winter ist es kalt. ___ fühlen sich die Nächte im Herbst an.', answer:'genauso', full:'Im Winter ist es kalt. Genauso fühlen sich die Nächte im Herbst an.' },
+    { prompt:'Dieses Kleid ist elegant. ___ sieht jener Rock aus.', answer:'genauso', full:'Dieses Kleid ist elegant. Genauso sieht jener Rock aus.' },
+    { prompt:'Er spielt gut Klavier. ___ beherrscht er die Gitarre.', answer:'genauso', full:'Er spielt gut Klavier. Genauso beherrscht er die Gitarre.' },
+    { prompt:'Sport ist gesund. ___ wichtig ist eine gute Ernährung.', answer:'genauso', full:'Sport ist gesund. Genauso wichtig ist eine gute Ernährung.' },
+    { prompt:'Der Hinweg war anstrengend. ___ wird sicher der Rückweg.', answer:'genauso', full:'Der Hinweg war anstrengend. Genauso wird sicher der Rückweg.' },
+    { prompt:'Ich mag keine Lügen. ___ hasse ich Unpünktlichkeit.', answer:'genauso', full:'Ich mag keine Lügen. Genauso hasse ich Unpünktlichkeit.' },
+    { prompt:'Früher war er schüchtern. ___ verhält er sich heute noch.', answer:'genauso', full:'Früher war er schüchtern. Genauso verhält er sich heute noch.' },
+    { prompt:'Das Hotel war sauber. ___ ordentlich war der Pool.', answer:'genauso', full:'Das Hotel war sauber. Genauso ordentlich war der Pool.' },
+    { prompt:'Ein Apfel ist gesund. ___ wertvoll ist eine Birne.', answer:'genauso', full:'Ein Apfel ist gesund. Genauso wertvoll ist eine Birne.' },
+    { prompt:'Du hast mir geholfen. ___ werde ich dich unterstützen.', answer:'genauso', full:'Du hast mir geholfen. Genauso werde ich dich unterstützen.' },
+    { prompt:'Das Wetter war gestern schön. ___ fängt der heutige Tag an.', answer:'genauso', full:'Das Wetter war gestern schön. Genauso fängt der heutige Tag an.' }
+  ]},
+
+  { key:'inzwischen', text:'inzwischen', tr:'bu sırada / bu vakte kadar', category:'pos0', examples:[
+    { prompt:'Ich koche das Essen. ___ deckt er den Tisch.', answer:'inzwischen', full:'Ich koche das Essen. Inzwischen deckt er den Tisch.' },
+    { prompt:'Wir warten auf den Zug. ___ lesen wir ein Buch.', answer:'inzwischen', full:'Wir warten auf den Zug. Inzwischen lesen wir ein Buch.' },
+    { prompt:'Ich dusche mich kurz. ___ kannst du den Kaffee kochen.', answer:'inzwischen', full:'Ich dusche mich kurz. Inzwischen kannst du den Kaffee kochen.' },
+    { prompt:'Der Film fängt erst in zehn Minuten an. ___ holen wir Popcorn.', answer:'inzwischen', full:'Der Film fängt erst in zehn Minuten an. Inzwischen holen wir Popcorn.' },
+    { prompt:'Ich war lange weg. ___ hat sich viel verändert.', answer:'inzwischen', full:'Ich war lange weg. Inzwischen hat sich viel verändert.' },
+    { prompt:'Lern bitte die Vokabeln. ___ bereite ich den Test vor.', answer:'inzwischen', full:'Lern bitte die Vokabeln. Inzwischen bereite ich den Test vor.' },
+    { prompt:'Das Auto ist in der Werkstatt. ___ nehme ich das Fahrrad.', answer:'inzwischen', full:'Das Auto ist in der Werkstatt. Inzwischen nehme ich das Fahrrad.' },
+    { prompt:'Er ist einkaufen gegangen. ___ räume ich die Wohnung auf.', answer:'inzwischen', full:'Er ist einkaufen gegangen. Inzwischen räume ich die Wohnung auf.' },
+    { prompt:'Wir haben uns lange nicht gesehen. ___ bist du sehr groß geworden.', answer:'inzwischen', full:'Wir haben uns lange nicht gesehen. Inzwischen bist du sehr groß geworden.' },
+    { prompt:'Ich schreibe die E-Mail. ___ suchst du bitte die Adresse?', answer:'inzwischen', full:'Ich schreibe die E-Mail. Inzwischen suchst du bitte die Adresse?' },
+    { prompt:'Der Teig muss 30 Minuten ruhen. ___ heize ich den Ofen vor.', answer:'inzwischen', full:'Der Teig muss 30 Minuten ruhen. Inzwischen heize ich den Ofen vor.' },
+    { prompt:'Du kannst dich schon mal ausruhen. ___ mache ich die Hausarbeit.', answer:'inzwischen', full:'Du kannst dich schon mal ausruhen. Inzwischen mache ich die Hausarbeit.' },
+    { prompt:'Das Paket ist noch nicht da. ___ habe ich dreimal angerufen.', answer:'inzwischen', full:'Das Paket ist noch nicht da. Inzwischen habe ich dreimal angerufen.' },
+    { prompt:'Geh schon mal vor. ___ ziehe ich meine Schuhe an.', answer:'inzwischen', full:'Geh schon mal vor. Inzwischen ziehe ich meine Schuhe an.' },
+    { prompt:'Die Kinder spielen im Garten. ___ trinken die Eltern Kaffee.', answer:'inzwischen', full:'Die Kinder spielen im Garten. Inzwischen trinken die Eltern Kaffee.' },
+    { prompt:'Ich habe vor einer Stunde bestellt. ___ habe ich großen Hunger.', answer:'inzwischen', full:'Ich habe vor einer Stunde bestellt. Inzwischen habe ich großen Hunger.' },
+    { prompt:'Du liest die Zeitung. ___ höre ich ein wenig Musik.', answer:'inzwischen', full:'Du liest die Zeitung. Inzwischen höre ich ein wenig Musik.' },
+    { prompt:'Der Techniker kommt später. ___ versuchen wir es selbst.', answer:'inzwischen', full:'Der Techniker kommt später. Inzwischen versuchen wir es selbst.' },
+    { prompt:'Früher war es hier leer. ___ stehen hier viele neue Häuser.', answer:'inzwischen', full:'Früher war es hier leer. Inzwischen stehen hier viele neue Häuser.' },
+    { prompt:'Ich gehe kurz zum Bäcker. ___ kannst du auf das Baby aufpassen.', answer:'inzwischen', full:'Ich gehe kurz zum Bäcker. Inzwischen kannst du auf das Baby aufpassen.' }
+  ]},
+
+  { key:'schließlich', text:'schließlich', tr:'nihayet / sonunda', category:'pos0', examples:[
+    { prompt:'Nach drei Stunden sind wir ___ angekommen.', answer:'schließlich', full:'Nach drei Stunden sind wir schließlich angekommen.' },
+    { prompt:'Er hat viel gelernt und ___ die Prüfung bestanden.', answer:'schließlich', full:'Er hat viel gelernt und schließlich die Prüfung bestanden.' },
+    { prompt:'Wir haben lange gesucht und ___ die Schlüssel gefunden.', answer:'schließlich', full:'Wir have lange gesucht und schließlich die Schlüssel gefunden.' },
+    { prompt:'Zuerst war er dagegen, aber ___ hat er zugestimmt.', answer:'schließlich', full:'Zuerst war er dagegen, aber schließlich hat er zugestimmt.' },
+    { prompt:'Lauf nicht so schnell, du bist ___ kein Profisportler.', answer:'schließlich', full:'Lauf nicht so schnell, du bist schließlich kein Profisportler.' },
+    { prompt:'Nach vielen Versuchen hat es ___ geklappt.', answer:'schließlich', full:'Nach vielen Versuchen hat es schließlich geklappt.' },
+    { prompt:'Wir müssen sparen, wir haben ___ nicht unendlich viel Geld.', answer:'schließlich', full:'Wir müssen sparen, wir haben schließlich nicht unendlich viel Geld.' },
+    { prompt:'Nach dem langen Streit haben sie sich ___ versöhnt.', answer:'schließlich', full:'Nach dem langen Streit haben sie sich schließlich versöhnt.' },
+    { prompt:'Das Paket ist ___ heute angekommen.', answer:'schließlich', full:'Das Paket ist schließlich heute angekommen.' },
+    { prompt:'Sei geduldig, er ist ___ noch ein Kind.', answer:'schließlich', full:'Sei geduldig, er ist schließlich noch ein Kind.' },
+    { prompt:'Nach zehn Jahren hat er ___ sein Studium beendet.', answer:'schließlich', full:'Nach zehn Jahren hat er schließlich sein Studium beendet.' },
+    { prompt:'Es hat lange gedauert, aber ___ sind wir fertig geworden.', answer:'schließlich', full:'Es hat lange gedauert, aber schließlich sind wir fertig geworden.' },
+    { prompt:'Ich helfe ihm, er ist ___ mein bester Freund.', answer:'schließlich', full:'Ich helfe ihm, er ist schließlich mein bester Freund.' },
+    { prompt:'Nach der langen Wanderung waren wir ___ am Ziel.', answer:'schließlich', full:'Nach der langen Wanderung waren wir schließlich am Ziel.' },
+    { prompt:'___ hat sie sich entschieden, den Job anzunehmen.', answer:'schließlich', full:'Schließlich hat sie sich entschieden, den Job anzunehmen.' },
+    { prompt:'Wir sollten gehen, es ist ___ schon sehr spät.', answer:'schließlich', full:'Wir sollten gehen, es ist schließlich schon sehr spät.' },
+    { prompt:'Nach der Reparatur funktioniert das Handy ___ wieder.', answer:'schließlich', full:'Nach der Reparatur funktioniert das Handy schließlich wieder.' },
+    { prompt:'Er hat den ganzen Tag gewartet und ___ ist sie gekommen.', answer:'schließlich', full:'Er hat den ganzen Tag gewartet und schließlich ist sie gekommen.' },
+    { prompt:'Du musst dich ausruhen, du warst ___ lange krank.', answer:'schließlich', full:'Du musst dich ausruhen, du warst schließlich lange krank.' },
+    { prompt:'Nach einer Stunde Wartezeit kam ___ der Bus.', answer:'schließlich', full:'Nach einer Stunde Wartezeit kam schließlich der Bus.' }
+  ]},
+
+
+  { key:'später', text:'später', tr:'daha sonra', category:'pos0', examples:[
+    { prompt:'Jetzt habe ich keine Zeit. ___ helfe ich dir.', answer:'später', full:'Jetzt habe ich keine Zeit. Später helfe ich dir.' },
+    { prompt:'Zuerst gehen wir einkaufen, ___ kochen wir.', answer:'später', full:'Zuerst gehen wir einkaufen, später kochen wir.' },
+    { prompt:'Ich muss jetzt arbeiten. ___ rufen wir uns an.', answer:'später', full:'Ich muss jetzt arbeiten. Später rufen wir uns an.' },
+    { prompt:'Das Wetter ist jetzt schlecht. ___ gehen wir spazieren.', answer:'später', full:'Das Wetter ist jetzt schlecht. Später gehen wir spazieren.' },
+    { prompt:'Trink erst deinen Kaffee. ___ können wir losgehen.', answer:'später', full:'Trink erst deinen Kaffee. Später können wir losgehen.' },
+    { prompt:'Ich bin gerade im Meeting. ___ lese ich deine Nachricht.', answer:'später', full:'Ich bin gerade im Meeting. Später lese ich deine Nachricht.' },
+    { prompt:'Zuerst räumen wir auf. ___ dürfen die Kinder spielen.', answer:'später', full:'Zuerst räumen wir auf. Später dürfen die Kinder spielen.' },
+    { prompt:'Der Film fängt erst um 20 Uhr an. ___ fahren wir zum Kino.', answer:'später', full:'Der Film fängt erst um 20 Uhr an. Später fahren wir zum Kino.' },
+    { prompt:'Ich habe jetzt Hunger. ___ essen wir im Restaurant.', answer:'später', full:'Ich habe jetzt Hunger. Später essen wir im Restaurant.' },
+    { prompt:'Die Sonne scheint noch nicht. ___ wird es sicher wärmer.', answer:'später', full:'Die Sonne scheint noch nicht. Später wird es sicher wärmer.' },
+    { prompt:'Zuerst besuchen wir meine Oma. ___ treffen wir unsere Freunde.', answer:'später', full:'Zuerst besuchen wir meine Oma. Später treffen wir unsere Freunde.' },
+    { prompt:'Ich repariere jetzt das Fahrrad. ___ machen wir eine Tour.', answer:'später', full:'Ich repariere jetzt das Fahrrad. Später machen wir eine Tour.' },
+    { prompt:'Die Prüfung ist erst nächste Woche. ___ lerne ich intensiver.', answer:'später', full:'Die Prüfung ist erst nächste Woche. Später lerne ich intensiver.' },
+    { prompt:'Komm erst mal rein. ___ besprechen wir die Details.', answer:'später', full:'Komm erst mal rein. Später besprechen wir die Details.' },
+    { prompt:'Ich bin im Moment müde. ___ mache ich den Abwasch.', answer:'später', full:'Ich im Moment müde. Später mache ich den Abwasch.' },
+    { prompt:'Zuerst waschen wir das Auto. ___ fahren wir in den Urlaub.', answer:'später', full:'Zuerst waschen wir das Auto. Später fahren wir in den Urlaub.' },
+    { prompt:'Das Geschäft ist jetzt voll. ___ kaufen wir ein.', answer:'später', full:'Das Geschäft ist jetzt voll. Später kaufen wir ein.' },
+    { prompt:'Ich brauche eine Pause. ___ arbeite ich weiter.', answer:'später', full:'Ich brauche eine Pause. Später arbeite ich weiter.' },
+    { prompt:'Die Kinder schlafen gerade. ___ schauen wir einen Film.', answer:'später', full:'Die Kinder schlafen gerade. Später schauen wir einen Film.' },
+    { prompt:'Zuerst machen wir Sport. ___ gehen wir zusammen duschen.', answer:'später', full:'Zuerst machen wir Sport. Später gehen wir zusammen duschen.' }
+  ]},
+
+  { key:'vorher', text:'vorher', tr:'öncesinde / daha önce', category:'pos0', examples:[
+    { prompt:'Wir gehen essen. ___ müssen wir einen Tisch reservieren.', answer:'vorher', full:'Wir gehen essen. Vorher müssen wir einen Tisch reservieren.' },
+    { prompt:'Ich gehe schlafen. ___ putze ich mir die Zähne.', answer:'vorher', full:'Ich gehe schlafen. Vorher putze ich mir die Zähne.' },
+    { prompt:'Du kannst fernsehen. Aber ___ machst du deine Hausaufgaben.', answer:'vorher', full:'Du kannst fernsehen. Aber vorher machst du deine Hausaufgaben.' },
+    { prompt:'Wir fliegen in den Urlaub. ___ packen wir unsere Koffer.', answer:'vorher', full:'Wir fliegen in den Urlaub. Vorher packen wir unsere Koffer.' },
+    { prompt:'Ich besuche dich. ___ rufe ich dich kurz an.', answer:'vorher', full:'Ich besuche dich. Vorher rufe ich dich kurz an.' },
+    { prompt:'Möchtest du den Kuchen essen? ___ musst du dir die Hände waschen.', answer:'vorher', full:'Möchtest du den Kuchen essen? Vorher musst du dir die Hände waschen.' },
+    { prompt:'Ich fahre zur Arbeit. ___ bringe ich die Kinder in den Kindergarten.', answer:'vorher', full:'Ich fahre zur Arbeit. Vorher bringe ich die Kinder in den Kindergarten.' },
+    { prompt:'Wir schauen den Film. ___ machen wir uns noch Popcorn.', answer:'vorher', full:'Wir schauen den Film. Vorher machen wir uns noch Popcorn.' },
+    { prompt:'Er hat die Prüfung bestanden. ___ hat er zwei Wochen lang gelernt.', answer:'vorher', full:'Er hat die Prüfung bestanden. Vorher hat er zwei Wochen lang gelernt.' },
+    { prompt:'Ich kaufe das Auto. ___ möchte ich eine Probefahrt machen.', answer:'vorher', full:'Ich kaufe das Auto. Vorher möchte ich eine Probefahrt machen.' },
+    { prompt:'Wir unterschreiben den Vertrag. ___ lesen wir ihn genau durch.', answer:'vorher', full:'Wir unterschreiben den Vertrag. Vorher lesen wir ihn genau durch.' },
+    { prompt:'Ich koche die Suppe. ___ muss ich das Gemüse schneiden.', answer:'vorher', full:'Ich koche die Suppe. Vorher muss ich das Gemüse schneiden.' },
+    { prompt:'Du darfst draußen spielen. ___ räumst du bitte dein Zimmer auf.', answer:'vorher', full:'Du darfst draußen spielen. Vorher räumst du bitte dein Zimmer auf.' },
+    { prompt:'Wir treffen uns um acht Uhr. ___ gehe ich noch schnell duschen.', answer:'vorher', full:'Wir treffen uns um acht Uhr. Vorher gehe ich noch schnell duschen.' },
+    { prompt:'Ich beantworte deine E-Mail. ___ muss ich meinen Chef fragen.', answer:'vorher', full:'Ich beantworte deine E-Mail. Vorher muss ich meinen Chef fragen.' },
+    { prompt:'Er ist jetzt Profi. ___ hat er bei einem kleinen Verein gespielt.', answer:'vorher', full:'Er ist jetzt Profi. Vorher hat er bei einem kleinen Verein gespielt.' },
+    { prompt:'Wir gehen ins Kino. ___ essen wir eine Kleinigkeit.', answer:'vorher', full:'Wir gehen ins Kino. Vorher essen wir eine Kleinigkeit.' },
+    { prompt:'Ich gebe dir das Geld zurück. ___ muss ich aber zur Bank gehen.', answer:'vorher', full:'Ich gebe dir das Geld zurück. Vorher muss ich aber zur Bank gehen.' },
+    { prompt:'Du kannst das Gerät benutzen. ___ lies bitte die Anleitung.', answer:'vorher', full:'Du kannst das Gerät benutzen. Vorher lies bitte die Anleitung.' },
+    { prompt:'Wir fangen mit der Besprechung an. ___ trinken wir einen Kaffee.', answer:'vorher', full:'Wir fangen mit der Besprechung an. Vorher trinken wir einen Kaffee.' }
+  ]},
+
+
+
+{ key:'und', text:'und', tr:'ve', category:'pos2', examples:[
+    { prompt:'Ich trinke Tee ___ ich esse ein Brot.', answer:'und', full:'Ich trinke Tee und ich esse ein Brot.' },
+    { prompt:'Er kommt aus Berlin ___ er wohnt jetzt in München.', answer:'und', full:'Er kommt aus Berlin und er wohnt jetzt in München.' },
+    { prompt:'Wir gehen spazieren ___ wir genießen die Sonne.', answer:'und', full:'Wir gehen spazieren und wir genießen die Sonne.' },
+    { prompt:'Du lernst Deutsch ___ du machst große Fortschritte.', answer:'und', full:'Du lernst Deutsch und du machst große Fortschritte.' },
+    { prompt:'Sie spielt Klavier ___ ihr Bruder spielt Gitarre.', answer:'und', full:'Sie spielt Klavier und ihr Bruder spielt Gitarre.' },
+    { prompt:'Das Wetter ist schön ___ die Vögel singen.', answer:'und', full:'Das Wetter ist schön und die Vögel singen.' },
+    { prompt:'Ich kaufe Äpfel ___ ich brauche auch Bananen.', answer:'und', full:'Ich kaufe Äpfel und ich brauche auch Bananen.' },
+    { prompt:'Wir besuchen Oma ___ wir bringen ihr Blumen mit.', answer:'und', full:'Wir besuchen Oma und wir bringen ihr Blumen mit.' },
+    { prompt:'Der Film ist spannend ___ die Musik ist toll.', answer:'und', full:'Der Film ist spannend und die Musik ist toll.' },
+    { prompt:'Ich putze die Küche ___ du räumst das Bad auf.', answer:'und', full:'Ich putze die Küche und du räumst das Bad auf.' },
+    { prompt:'Er ist sehr nett ___ er hilft mir immer.', answer:'und', full:'Er ist sehr nett und er hilft mir immer.' },
+    { prompt:'Morgen ist Samstag ___ wir haben frei.', answer:'und', full:'Morgen ist Samstag und wir haben frei.' },
+    { prompt:'Ich schreibe eine E-Mail ___ ich schicke sie sofort ab.', answer:'und', full:'Ich schreibe eine E-Mail und ich schicke sie sofort ab.' },
+    { prompt:'Wir essen Pizza ___ wir trinken eine Cola dazu.', answer:'und', full:'Wir essen Pizza und wir trinken eine Cola dazu.' },
+    { prompt:'Das Handy ist neu ___ es funktioniert sehr gut.', answer:'und', full:'Das Handy ist neu und es funktioniert sehr gut.' },
+    { prompt:'Ich mache Sport ___ ich fühle mich fit.', answer:'und', full:'Ich mache Sport und ich fühle mich fit.' },
+    { prompt:'Du liest ein Buch ___ ich höre Musik.', answer:'und', full:'Du liest ein Buch und ich höre Musik.' },
+    { prompt:'Die Wohnung ist hell ___ sie hat einen Balkon.', answer:'und', full:'Die Wohnung ist hell und sie hat einen Balkon.' },
+    { prompt:'Er studiert Medizin ___ er möchte Arzt werden.', answer:'und', full:'Er studiert Medizin und er möchte Arzt werden.' },
+    { prompt:'Ich habe einen Hund ___ meine Freundin hat eine Katze.', answer:'und', full:'Ich habe einen Hund und meine Freundin hat eine Katze.' }
+  ]},
+
+
+{ key:'oder', text:'oder', tr:'veya', category:'pos2', examples:[
+    { prompt:'Trinkst du einen Kaffee ___ möchtest du lieber einen Tee?', answer:'oder', full:'Trinkst du einen Kaffee oder möchtest du lieber einen Tee?' },
+    { prompt:'Wir gehen heute ins Kino ___ wir bleiben gemütlich zu Hause.', answer:'oder', full:'Wir gehen heute ins Kino oder wir bleiben gemütlich zu Hause.' },
+    { prompt:'Kommst du mit zum Sport ___ bist du heute zu müde?', answer:'oder', full:'Kommst du mit zum Sport oder bist du heute zu müde?' },
+    { prompt:'Ich koche heute Abend ___ wir bestellen uns eine Pizza.', answer:'oder', full:'Ich koche heute Abend oder wir bestellen uns eine Pizza.' },
+    { prompt:'Fahren wir mit dem Zug ___ nehmen wir lieber das Auto?', answer:'oder', full:'Fahren wir mit dem Zug oder nehmen wir lieber das Auto?' },
+    { prompt:'Lernst du jetzt für die Prüfung ___ machst du erst eine Pause?', answer:'oder', full:'Lernst du jetzt für die Prüfung oder machst du erst eine Pause?' },
+    { prompt:'Du kannst mich anrufen ___ du schreibst mir eine Nachricht.', answer:'oder', full:'Du kannst mich anrufen oder du schreibst mir eine Nachricht.' },
+    { prompt:'Besuchen wir deine Eltern ___ bleiben wir am Wochenende hier?', answer:'oder', full:'Besuchen wir deine Eltern oder bleiben wir am Wochenende hier?' },
+    { prompt:'Isst du ein Stück Kuchen ___ möchtest du lieber ein Eis?', answer:'oder', full:'Isst du ein Stück Kuchen oder möchtest du lieber ein Eis?' },
+    { prompt:'Gehen wir im Park spazieren ___ fahren wir an den See?', answer:'oder', full:'Gehen wir im Park spazieren oder fahren wir an den See?' },
+    { prompt:'Kaufst du dir das neue Handy ___ behältst du dein altes Gerät?', answer:'oder', full:'Kaufst du dir das neue Handy oder behältst du dein altes Gerät?' },
+    { prompt:'Möchtest du jetzt duschen ___ gehst du erst später ins Bad?', answer:'oder', full:'Möchtest du jetzt duschen oder gehst du erst später ins Bad?' },
+    { prompt:'Wir räumen jetzt auf ___ wir machen das morgen früh.', answer:'oder', full:'Wir räumen jetzt auf oder wir machen das morgen früh.' },
+    { prompt:'Soll ich das Fenster öffnen ___ ist es dir zu kalt?', answer:'oder', full:'Soll ich das Fenster öffnen oder ist es dir zu kalt?' },
+    { prompt:'Liest du ein Buch ___ schaust du lieber einen Film?', answer:'oder', full:'Liest du ein Buch oder schaust du lieber einen Film?' },
+    { prompt:'Möchtest du Zucker im Kaffee ___ trinkst du ihn schwarz?', answer:'oder', full:'Möchtest du Zucker im Kaffee oder trinkst du ihn schwarz?' },
+    { prompt:'Fahren wir im Sommer ans Meer ___ wandern wir in den Bergen?', answer:'oder', full:'Fahren wir im Sommer ans Meer oder wandern wir in den Bergen?' },
+    { prompt:'Kommst du heute vorbei ___ sehen wir uns erst morgen?', answer:'oder', full:'Kommst du heute vorbei oder sehen wir uns erst morgen?' },
+    { prompt:'Kaufst du das Brot beim Bäcker ___ holst du es im Supermarkt?', answer:'oder', full:'Kaufst du das Brot beim Bäcker oder holst du es im Supermarkt?' },
+    { prompt:'Sprechen wir jetzt darüber ___ ist das Thema für dich erledigt?', answer:'oder', full:'Sprechen wir jetzt darüber oder ist das Thema für dich erledigt?' }
+  ]},
+
+
+{ key:'aber', text:'aber', tr:'ama', category:'pos2', examples:[
+    { prompt:'Ich habe Hunger, ___ ich möchte nichts essen.', answer:'aber', full:'Ich habe Hunger, aber ich möchte nichts essen.' },
+    { prompt:'Das Auto ist alt, ___ es fährt noch sehr gut.', answer:'aber', full:'Das Auto ist alt, aber es fährt noch sehr gut.' },
+    { prompt:'Ich lerne viel, ___ Deutsch ist schwierig.', answer:'aber', full:'Ich lerne viel, aber Deutsch ist schwierig.' },
+    { prompt:'Er ist reich, ___ er ist nicht glücklich.', answer:'aber', full:'Er ist reich, aber er ist nicht glücklich.' },
+    { prompt:'Wir wollen kommen, ___ wir haben keine Zeit.', answer:'aber', full:'Wir wollen kommen, aber wir haben keine Zeit.' },
+    { prompt:'Die Sonne scheint, ___ es ist sehr kalt.', answer:'aber', full:'Die Sonne scheint, aber es ist sehr kalt.' },
+    { prompt:'Ich verstehe dich, ___ ich habe eine andere Meinung.', answer:'aber', full:'Ich verstehe dich, aber ich habe eine andere Meinung.' },
+    { prompt:'Das Hotel war schön, ___ das Essen war schlecht.', answer:'aber', full:'Das Hotel war schön, aber das Essen war schlecht.' },
+    { prompt:'Ich mag Kaffee, ___ ich trinke ihn ohne Zucker.', answer:'aber', full:'Ich mag Kaffee, aber ich trinke ihn ohne Zucker.' },
+    { prompt:'Der Film ist lang, ___ er ist sehr interessant.', answer:'aber', full:'Der Film ist lang, aber er ist sehr interessant.' },
+    { prompt:'Sie ist müde, ___ sie arbeitet trotzdem weiter.', answer:'aber', full:'Sie ist müde, aber sie arbeitet trotzdem weiter.' },
+    { prompt:'Ich habe den Schlüssel, ___ ich kann die Tür nicht öffnen.', answer:'aber', full:'Ich habe den Schlüssel, aber ich kann die Tür nicht öffnen.' },
+    { prompt:'Das Handy ist teuer, ___ ich kaufe es trotzdem.', answer:'aber', full:'Das Handy ist teuer, aber ich kaufe es trotzdem.' },
+    { prompt:'Wir haben gesucht, ___ wir haben nichts gefunden.', answer:'aber', full:'Wir haben gesucht, aber wir haben nichts gefunden.' },
+    { prompt:'Du hast recht, ___ du bist sehr unhöflich.', answer:'aber', full:'Du hast recht, aber du bist sehr unhöflich.' },
+    { prompt:'Ich trinke gerne Saft, ___ ich mag keine Cola.', answer:'aber', full:'Ich trinke gerne Saft, aber ich mag keine Cola.' },
+    { prompt:'Er spielt gut Fußball, ___ er trainiert nicht oft.', answer:'aber', full:'Er spielt gut Fußball, aber er trainiert nicht oft.' },
+    { prompt:'Die Wohnung ist klein, ___ sie ist sehr gemütlich.', answer:'aber', full:'Die Wohnung ist klein, aber sie ist sehr gemütlich.' },
+    { prompt:'Ich habe angerufen, ___ niemand hat geantwortet.', answer:'aber', full:'Ich habe angerufen, aber niemand hat geantwortet.' },
+    { prompt:'Es regnet, ___ wir gehen trotzdem spazieren.', answer:'aber', full:'Es regnet, aber wir gehen trotzdem spazieren.' }
+  ]},
+
+
+{ key:'denn', text:'denn', tr:'çünkü', category:'pos2', examples:[
+    { prompt:'Ich esse jetzt etwas, ___ ich habe großen Hunger.', answer:'denn', full:'Ich esse jetzt etwas, denn ich habe großen Hunger.' },
+    { prompt:'Er bleibt heute im Bett, ___ er ist krank.', answer:'denn', full:'Er bleibt heute im Bett, denn er ist krank.' },
+    { prompt:'Wir nehmen ein Taxi, ___ es regnet sehr stark.', answer:'denn', full:'Wir nehmen ein Taxi, denn es regnet sehr stark.' },
+    { prompt:'Ich lerne fleißig Deutsch, ___ ich möchte in Berlin arbeiten.', answer:'denn', full:'Ich lerne fleißig Deutsch, denn ich möchte in Berlin arbeiten.' },
+    { prompt:'Sie freut sich sehr, ___ sie hat Geburtstag.', answer:'denn', full:'Sie freut sich sehr, denn sie hat Geburtstag.' },
+    { prompt:'Ich gehe heute früh schlafen, ___ ich bin sehr müde.', answer:'denn', full:'Ich gehe heute früh schlafen, denn ich bin sehr müde.' },
+    { prompt:'Wir kaufen Brot, ___ wir haben kein Frühstück mehr.', answer:'denn', full:'Wir kaufen Brot, denn wir haben kein Frühstück mehr.' },
+    { prompt:'Du musst dich beeilen, ___ der Zug fährt gleich ab.', answer:'denn', full:'Du musst dich beeilen, denn der Zug fährt gleich ab.' },
+    { prompt:'Ich brauche Hilfe, ___ die Aufgabe ist zu schwierig.', answer:'denn', full:'Ich brauche Hilfe, denn die Aufgabe ist zu schwierig.' },
+    { prompt:'Er trägt einen Mantel, ___ es ist draußen sehr kalt.', answer:'denn', full:'Er trägt einen Mantel, denn es ist draußen sehr kalt.' },
+    { prompt:'Wir bleiben zu Hause, ___ wir haben keine Lust auf Kino.', answer:'denn', full:'Wir bleiben zu Hause, denn wir haben keine Lust auf Kino.' },
+    { prompt:'Ich trinke viel Wasser, ___ es ist heute sehr heiß.', answer:'denn', full:'Ich trinke viel Wasser, denn es ist heute sehr heiß.' },
+    { prompt:'Sie geht zum Zahnarzt, ___ sie hat Zahnschmerzen.', answer:'denn', full:'Sie geht zum Zahnarzt, denn sie hat Zahnschmerzen.' },
+    { prompt:'Ich kann nicht kommen, ___ ich muss noch arbeiten.', answer:'denn', full:'Ich kann nicht kommen, denn ich muss noch arbeiten.' },
+    { prompt:'Wir sparen Geld, ___ wir wollen ein Auto kaufen.', answer:'denn', full:'Wir sparen Geld, denn wir wollen ein Auto kaufen.' },
+    { prompt:'Er macht das Fenster zu, ___ es ist sehr laut draußen.', answer:'denn', full:'Er macht das Fenster zu, denn es ist sehr laut draußen.' },
+    { prompt:'Ich mag diesen Film, ___ er ist sehr lustig.', answer:'denn', full:'Ich mag diesen Film, denn er ist sehr lustig.' },
+    { prompt:'Du solltest lernen, ___ die Prüfung ist morgen.', answer:'denn', full:'Du solltest lernen, denn die Prüfung ist morgen.' },
+    { prompt:'Ich rufe meine Mutter an, ___ sie hat lange nichts gehört.', answer:'denn', full:'Ich rufe meine Mutter an, denn sie hat lange nichts gehört.' },
+    { prompt:'Wir gehen in den Park, ___ die Sonne scheint heute.', answer:'denn', full:'Wir gehen in den Park, denn die Sonne scheint heute.' }
+  ]},
+
+
+{ key:'sondern', text:'sondern', tr:'aksine / bilakis', category:'pos2', examples:[
+    { prompt:'Ich trinke keinen Kaffee, ___ ich trinke einen Tee.', answer:'sonntern', full:'Ich trinke keinen Kaffee, sondern ich trinke einen Tee.' },
+    { prompt:'Wir gehen nicht ins Kino, ___ wir bleiben heute zu Hause.', answer:'sondern', full:'Wir gehen nicht ins Kino, sondern wir bleiben heute zu Hause.' },
+    { prompt:'Er kommt nicht aus England, ___ er kommt aus den USA.', answer:'sondern', full:'Er kommt nicht aus England, sondern er kommt aus den USA.' },
+    { prompt:'Das ist kein Apfel, ___ das ist eine Birne.', answer:'sondern', full:'Das ist kein Apfel, sondern das ist eine Birne.' },
+    { prompt:'Ich lerne nicht Spanisch, ___ ich lerne fleißig Deutsch.', answer:'sondern', full:'Ich lerne nicht Spanisch, sondern ich lerne fleißig Deutsch.' },
+    { prompt:'Sie ist nicht traurig, ___ sie ist einfach nur müde.', answer:'sondern', full:'Sie ist nicht traurig, sondern sie ist einfach nur müde.' },
+    { prompt:'Wir kaufen kein neues Auto, ___ wir reparieren das alte.', answer:'sondern', full:'Wir kaufen kein neues Auto, sondern wir reparieren das alte.' },
+    { prompt:'Du sollst nicht spielen, ___ du sollst jetzt arbeiten.', answer:'sondern', full:'Du sollst nicht spielen, sondern du sollst jetzt arbeiten.' },
+    { prompt:'Es regnet nicht, ___ die Sonne scheint sehr hell.', answer:'sondern', full:'Es regnet nicht, sondern die Sonne scheint sehr hell.' },
+    { prompt:'Ich brauche kein Geld, ___ ich brauche nur deine Hilfe.', answer:'sondern', full:'Ich brauche kein Geld, sondern ich brauche nur deine Hilfe.' },
+    { prompt:'Das Kleid ist nicht blau, ___ es ist dunkelgrün.', answer:'sondern', full:'Das Kleid ist nicht blau, sondern es ist dunkelgrün.' },
+    { prompt:'Er spielt nicht Fußball, ___ er spielt lieber Tennis.', answer:'sondern', full:'Er spielt nicht Fußball, sondern er spielt lieber Tennis.' },
+    { prompt:'Wir essen heute kein Fleisch, ___ wir kochen Nudeln.', answer:'sondern', full:'Wir essen heute kein Fleisch, sondern wir kochen Nudeln.' },
+    { prompt:'Ich suche nicht meinen Schlüssel, ___ ich suche mein Handy.', answer:'sondern', full:'Ich suche nicht meinen Schlüssel, sondern ich suche mein Handy.' },
+    { prompt:'Das Hotel war nicht teuer, ___ es war sehr günstig.', answer:'sondern', full:'Das Hotel war nicht teuer, sondern es war sehr günstig.' },
+    { prompt:'Du bist nicht unpünktlich, ___ du bist heute sehr früh.', answer:'sondern', full:'Du bist nicht unpünktlich, sondern du bist heute sehr früh.' },
+    { prompt:'Ich meine nicht dich, ___ ich meine deinen Bruder.', answer:'sondern', full:'Ich meine nicht dich, sondern ich meine deinen Bruder.' },
+    { prompt:'Sie arbeitet nicht in Berlin, ___ sie arbeitet in Potsdam.', answer:'sondern', full:'Sie arbeitet nicht in Berlin, sondern sie arbeitet in Potsdam.' },
+    { prompt:'Wir fahren nicht mit dem Bus, ___ wir gehen zu Fuß.', answer:'sondern', full:'Wir fahren nicht mit dem Bus, sondern wir gehen zu Fuß.' },
+    { prompt:'Das ist kein Problem, ___ das ist eine Chance.', answer:'sondern', full:'Das ist kein Problem, sondern das ist eine Chance.' }
+  ]},
+
+
+
+
+{ key:'weil', text:'weil', tr:'çünkü / -dığı için', category:'sub', examples:[
+    { prompt:'Ich esse jetzt etwas, ___ ich Hunger habe.', answer:'weil', full:'Ich esse jetzt etwas, weil ich Hunger habe.' },
+    { prompt:'Er bleibt im Bett, ___ er krank ist.', answer:'weil', full:'Er bleibt im Bett, weil er krank ist.' },
+    { prompt:'Wir nehmen ein Taxi, ___ es regnet.', answer:'weil', full:'Wir nehmen ein Taxi, weil es regnet.' },
+    { prompt:'Ich lerne Deutsch, ___ ich in Deutschland arbeiten möchte.', answer:'weil', full:'Ich lerne Deutsch, weil ich in Deutschland arbeiten möchte.' },
+    { prompt:'Sie freut sich, ___ sie Geburtstag hat.', answer:'weil', full:'Sie freut sich, weil sie Geburtstag hat.' },
+    { prompt:'Ich gehe schlafen, ___ ich müde bin.', answer:'weil', full:'Ich gehe schlafen, weil ich müde bin.' },
+    { prompt:'Wir kaufen Brot, ___ wir kein Frühstück mehr haben.', answer:'weil', full:'Wir kaufen Brot, weil wir kein Frühstück mehr haben.' },
+    { prompt:'Du musst dich beeilen, ___ der Zug gleich fährt.', answer:'weil', full:'Du musst dich beeilen, weil der Zug gleich fährt.' },
+    { prompt:'Ich brauche Hilfe, ___ die Aufgabe schwierig ist.', answer:'weil', full:'Ich brauche Hilfe, weil die Aufgabe schwierig ist.' },
+    { prompt:'Er trägt einen Mantel, ___ es kalt ist.', answer:'weil', full:'Er trägt einen Mantel, weil es kalt ist.' },
+    { prompt:'Wir bleiben zu Hause, ___ wir keine Lust haben.', answer:'weil', full:'Wir bleiben zu Hause, weil wir keine Lust haben.' },
+    { prompt:'Ich trinke Wasser, ___ es heiß ist.', answer:'weil', full:'Ich trinke Wasser, weil es heiß ist.' },
+    { prompt:'Sie geht zum Arzt, ___ sie Schmerzen hat.', answer:'weil', full:'Sie geht zum Arzt, weil sie Schmerzen hat.' },
+    { prompt:'Ich kann nicht kommen, ___ ich arbeiten muss.', answer:'weil', full:'Ich kann nicht kommen, weil ich arbeiten muss.' },
+    { prompt:'Wir sparen Geld, ___ wir ein Auto kaufen wollen.', answer:'weil', full:'Wir sparen Geld, weil wir ein Auto kaufen wollen.' },
+    { prompt:'Er macht das Fenster zu, ___ es laut ist.', answer:'weil', full:'Er macht das Fenster zu, weil es laut ist.' },
+    { prompt:'Ich mag diesen Film, ___ er lustig ist.', answer:'weil', full:'Ich mag diesen Film, weil er lustig ist.' },
+    { prompt:'Du solltest lernen, ___ die Prüfung morgen ist.', answer:'weil', full:'Du solltest lernen, weil die Prüfung morgen ist.' },
+    { prompt:'Ich rufe meine Mutter an, ___ ich sie vermisse.', answer:'weil', full:'Ich rufe meine Mutter an, weil ich sie vermisse.' },
+    { prompt:'Wir gehen in den Park, ___ die Sonne scheint.', answer:'weil', full:'Wir gehen in den Park, weil die Sonne scheint.' }
+  ]},
+
+
+
+{ key:'dass', text:'dass', tr:'-dığı / -dığını', category:'sub', examples:[
+    { prompt:'Ich weiß, ___ du heute Geburtstag hast.', answer:'dass', full:'Ich weiß, dass du heute Geburtstag hast.' },
+    { prompt:'Ich glaube, ___ es morgen regnen wird.', answer:'dass', full:'Ich glaube, dass es morgen regnen wird.' },
+    { prompt:'Er sagt, ___ er keine Zeit hat.', answer:'dass', full:'Er sagt, dass er keine Zeit hat.' },
+    { prompt:'Wir hoffen, ___ du bald wieder gesund bist.', answer:'dass', full:'Wir hoffen, dass du bald wieder gesund bist.' },
+    { prompt:'Ich finde es schön, ___ du gekommen bist.', answer:'dass', full:'Ich finde es schön, dass du gekommen bist.' },
+    { prompt:'Es ist wichtig, ___ man täglich Wasser trinkt.', answer:'dass', full:'Es ist wichtig, dass man täglich Wasser trinkt.' },
+    { prompt:'Ich denke, ___ der Film sehr spannend ist.', answer:'dass', full:'Ich denke, dass der Film sehr spannend ist.' },
+    { prompt:'Sie erzählt, ___ sie einen neuen Job hat.', answer:'dass', full:'Sie erzählt, dass sie einen neuen Job hat.' },
+    { prompt:'Ich bin sicher, ___ wir den Schlüssel finden.', answer:'dass', full:'Ich bin sicher, dass wir den Schlüssel finden.' },
+    { prompt:'Es tut mir leid, ___ ich dich gestört habe.', answer:'dass', full:'Es tut mir leid, dass ich dich gestört habe.' },
+    { prompt:'Ich freue mich, ___ du die Prüfung bestanden hast.', answer:'dass', full:'Ich freue mich, dass du die Prüfung bestanden hast.' },
+    { prompt:'Wusstest du, ___ er nach Berlin zieht?', answer:'dass', full:'Wusstest du, dass er nach Berlin zieht?' },
+    { prompt:'Ich glaube nicht, ___ das Wetter heute besser wird.', answer:'dass', full:'Ich glaube nicht, dass das Wetter heute besser wird.' },
+    { prompt:'Es ist klar, ___ wir Hilfe brauchen.', answer:'dass', full:'Es ist klar, dass wir Hilfe brauchen.' },
+    { prompt:'Ich hoffe, ___ das Essen dir schmeckt.', answer:'dass', full:'Ich hoffe, dass das Essen dir schmeckt.' },
+    { prompt:'Sie meint, ___ die Wohnung zu teuer ist.', answer:'dass', full:'Sie meint, dass die Wohnung zu teuer ist.' },
+    { prompt:'Es ist schade, ___ du nicht mitkommen kannst.', answer:'dass', full:'Es schade, dass du nicht mitkommen kannst.' },
+    { prompt:'Ich habe gehört, ___ ihr ein Haus kauft.', answer:'dass', full:'Ich habe gehört, dass ihr ein Haus kauft.' },
+    { prompt:'Wir wünschen uns, ___ alles gut klappt.', answer:'dass', full:'Wir wünschen uns, dass alles gut klappt.' },
+    { prompt:'Er verspricht, ___ er pünktlich kommt.', answer:'dass', full:'Er verspricht, dass er pünktlich kommt.' }
+  ]},
+
+
+{ key:'wenn', text:'wenn', tr:'eğer / -dığı zaman', category:'sub', examples:[
+    { prompt:'Ich rufe dich an, ___ ich zu Hause bin.', answer:'wenn', full:'Ich rufe dich an, wenn ich zu Hause bin.' },
+    { prompt:'Wir gehen spazieren, ___ die Sonne scheint.', answer:'wenn', full:'Wir gehen spazieren, wenn die Sonne scheint.' },
+    { prompt:'Du bekommst ein Eis, ___ du dein Zimmer aufräumst.', answer:'wenn', full:'Du bekommst ein Eis, wenn du dein Zimmer aufräumst.' },
+    { prompt:'Ich trinke immer Tee, ___ ich krank bin.', answer:'wenn', full:'Ich trinke immer Tee, wenn ich krank bin.' },
+    { prompt:'Sag mir bitte Bescheid, ___ du Hilfe brauchst.', answer:'wenn', full:'Sag mir bitte Bescheid, wenn du Hilfe brauchst.' },
+    { prompt:'Wir bleiben zu Hause, ___ es regnet.', answer:'wenn', full:'Wir bleiben zu Hause, wenn es regnet.' },
+    { prompt:'Ich freue mich, ___ du mich besuchst.', answer:'wenn', full:'Ich freue mich, wenn du mich besuchst.' },
+    { prompt:'Nimm eine Jacke mit, ___ es kalt wird.', answer:'wenn', full:'Nimm eine Jacke mit, wenn es kalt wird.' },
+    { prompt:'Ich kann nicht schlafen, ___ es laut ist.', answer:'wenn', full:'Ich kann nicht schlafen, wenn es laut ist.' },
+    { prompt:'Du musst lernen, ___ du die Prüfung bestehen willst.', answer:'wenn', full:'Du musst lernen, wenn du die Prüfung bestehen willst.' },
+    { prompt:'Was machst du, ___ du am Wochenende frei hast?', answer:'wenn', full:'Was machst du, wenn du am Wochenende frei hast?' },
+    { prompt:'Ich bin glücklich, ___ ich Musik höre.', answer:'wenn', full:'Ich bin glücklich, wenn ich Musik höre.' },
+    { prompt:'Wir essen im Garten, ___ das Wetter gut ist.', answer:'wenn', full:'Wir essen im Garten, wenn das Wetter gut ist.' },
+    { prompt:'Komm bitte pünktlich, ___ wir uns treffen.', answer:'wenn', full:'Komm bitte pünktlich, wenn wir uns treffen.' },
+    { prompt:'Ich brauche eine Brille, ___ ich lese.', answer:'wenn', full:'Ich brauche eine Brille, wenn ich lese.' },
+    { prompt:'Ruf die Polizei, ___ ein Unfall passiert.', answer:'wenn', full:'Ruf die Polizei, wenn ein Unfall passiert.' },
+    { prompt:'Ich nehme den Bus, ___ mein Auto kaputt ist.', answer:'wenn', full:'Ich nehme den Bus, wenn mein Auto kaputt ist.' },
+    { prompt:'Trink viel Wasser, ___ du Sport machst.', answer:'wenn', full:'Trink viel Wasser, wenn du Sport machst.' },
+    { prompt:'Ich antworte sofort, ___ ich die E-Mail bekomme.', answer:'wenn', full:'Ich antworte sofort, wenn ich die E-Mail bekomme.' },
+    { prompt:'Wir machen ein Picknick, ___ der Park leer ist.', answer:'wenn', full:'Wir machen ein Picknick, wenn der Park leer ist.' }
+  ]},
+
+
+{ key:'obwohl', text:'obwohl', tr:'-e rağmen', category:'sub', examples:[
+    { prompt:'Ich gehe spazieren, ___ es regnet.', answer:'obwohl', full:'Ich gehe spazieren, obwohl es regnet.' },
+    { prompt:'Er arbeitet weiter, ___ er sehr müde ist.', answer:'obwohl', full:'Er arbeitet weiter, obwohl er sehr müde ist.' },
+    { prompt:'Wir kaufen das Auto, ___ es sehr teuer ist.', answer:'obwohl', full:'Wir kaufen das Auto, obwohl es sehr teuer ist.' },
+    { prompt:'Ich verstehe ihn, ___ er sehr leise spricht.', answer:'obwohl', full:'Ich verstehe ihn, obwohl er sehr leise spricht.' },
+    { prompt:'Sie isst einen Salat, ___ sie großen Hunger hat.', answer:'obwohl', full:'Sie isst einen Salat, obwohl sie großen Hunger hat.' },
+    { prompt:'Ich lerne Deutsch, ___ die Grammatik schwierig ist.', answer:'obwohl', full:'Ich lerne Deutsch, obwohl die Grammatik schwierig ist.' },
+    { prompt:'Wir gehen schwimmen, ___ das Wasser kalt ist.', answer:'obwohl', full:'Wir gehen schwimmen, obwohl das Wasser kalt ist.' },
+    { prompt:'Er kommt zur Party, ___ er keine Lust hat.', answer:'obwohl', full:'Er kommt zur Party, obwohl er keine Lust hat.' },
+    { prompt:'Ich trinke den Kaffee, ___ er schon kalt ist.', answer:'obwohl', full:'Ich trinke den Kaffee, obwohl er schon kalt ist.' },
+    { prompt:'Sie trägt ein T-Shirt, ___ es draußen friert.', answer:'obwohl', full:'Sie trägt ein T-Shirt, obwohl es draußen friert.' },
+    { prompt:'Ich finde den Weg, ___ ich kein GPS habe.', answer:'obwohl', full:'Ich finde den Weg, obwohl ich kein GPS habe.' },
+    { prompt:'Er ist glücklich, ___ er viel Arbeit hat.', answer:'obwohl', full:'Er ist glücklich, obwohl er viel Arbeit hat.' },
+    { prompt:'Wir gewinnen das Spiel, ___ wir schlecht spielen.', answer:'obwohl', full:'Wir gewinnen das Spiel, obwohl wir schlecht spielen.' },
+    { prompt:'Ich esse den Kuchen, ___ ich eigentlich eine Diät mache.', answer:'obwohl', full:'Ich esse den Kuchen, obwohl ich eigentlich eine Diät mache.' },
+    { prompt:'Sie geht zur Arbeit, ___ sie krank ist.', answer:'obwohl', full:'Sie geht zur Arbeit, obwohl sie krank ist.' },
+    { prompt:'Ich schlafe gut, ___ es draußen laut ist.', answer:'obwohl', full:'Ich schlafe gut, obwohl es draußen laut ist.' },
+    { prompt:'Er kauft das Handy, ___ sein altes noch funktioniert.', answer:'obwohl', full:'Er kauft das Handy, obwohl sein altes noch funktioniert.' },
+    { prompt:'Wir bleiben draußen, ___ die Sonne untergeht.', answer:'obwohl', full:'Wir bleiben draußen, obwohl die Sonne untergeht.' },
+    { prompt:'Ich mag ihn, ___ er oft unhöflich ist.', answer:'obwohl', full:'Ich mag ihn, obwohl er oft unhöflich ist.' },
+    { prompt:'Sie fährt mit dem Fahrrad, ___ sie ein Auto hat.', answer:'obwohl', full:'Sie fährt mit dem Fahrrad, obwohl sie ein Auto hat.' }
+  ]},
+
+
+{ key:'damit', text:'damit', tr:'-sin diye / amacıyla', category:'sub', examples:[
+    { prompt:'Ich lerne viel, ___ ich die Prüfung bestehe.', answer:'damit', full:'Ich lerne viel, damit ich die Prüfung bestehe.' },
+    { prompt:'Er gibt mir Geld, ___ ich das Ticket kaufe.', answer:'damit', full:'Er gibt mir Geld, damit ich das Ticket kaufe.' },
+    { prompt:'Wir sprechen leise, ___ das Baby nicht aufwacht.', answer:'damit', full:'Wir sprechen leise, damit das Baby nicht aufwacht.' },
+    { prompt:'Ich koche heute, ___ du dich ausruhen kannst.', answer:'damit', full:'Ich koche heute, damit du dich ausruhen kannst.' },
+    { prompt:'Zieh dich warm an, ___ du dich nicht erkältest.', answer:'damit', full:'Zieh dich warm an, damit du dich nicht erkältest.' },
+    { prompt:'Er arbeitet hart, ___ seine Familie gut leben kann.', answer:'damit', full:'Er arbeitet hart, damit seine Familie gut leben kann.' },
+    { prompt:'Ich schreibe dir eine Liste, ___ du nichts vergisst.', answer:'damit', full:'Ich schreibe dir eine Liste, damit du nichts vergisst.' },
+    { prompt:'Wir beeilen uns, ___ wir den Zug noch erwischen.', answer:'damit', full:'Wir beeilen uns, damit wir den Zug noch erwischen.' },
+    { prompt:'Ich mache das Fenster zu, ___ es im Zimmer warm bleibt.', answer:'damit', full:'Ich mache das Fenster zu, damit es im Zimmer warm bleibt.' },
+    { prompt:'Er spart jeden Monat, ___ er im Sommer verreisen kann.', answer:'damit', full:'Er spart jeden Monat, damit er im Sommer verreisen kann.' },
+    { prompt:'Ich erkläre es dir noch einmal, ___ du es verstehst.', answer:'damit', full:'Ich erkläre es dir noch einmal, damit du es verstehst.' },
+    { prompt:'Wir kaufen einen Kuchen, ___ die Gäste sich freuen.', answer:'damit', full:'Wir kaufen einen Kuchen, damit die Gäste sich freuen.' },
+    { prompt:'Stell den Wecker, ___ du morgen nicht verschläfst.', answer:'damit', full:'Stell den Wecker, damit du morgen nicht verschläfst.' },
+    { prompt:'Ich leihe dir mein Buch, ___ du es lesen kannst.', answer:'damit', full:'Ich leihe dir mein Buch, damit du es lesen kannst.' },
+    { prompt:'Sie trägt eine Brille, ___ sie besser sehen kann.', answer:'damit', full:'Sie trägt eine Brille, damit sie besser sehen kann.' },
+    { prompt:'Ich gebe dir den Schlüssel, ___ du in die Wohnung kannst.', answer:'damit', full:'Ich gebe dir den Schlüssel, damit du in die Wohnung kannst.' },
+    { prompt:'Wir machen Sport, ___ wir gesund bleiben.', answer:'damit', full:'Wir machen Sport, damit wir gesund bleiben.' },
+    { prompt:'Ich schalte das Licht an, ___ ich besser lesen kann.', answer:'damit', full:'Ich schalte das Licht an, damit ich besser lesen kann.' },
+    { prompt:'Er wiederholt die Vokabeln, ___ er sie nicht vergisst.', answer:'damit', full:'Er wiederholt die Vokabeln, damit er sie nicht vergisst.' },
+    { prompt:'Ich stelle das Handy auf laut, ___ ich deinen Anruf höre.', answer:'damit', full:'Ich stelle das Handy auf laut, damit ich deinen Anruf höre.' }
+  ]},
+
+
+
+{ key:'bevor', text:'bevor', tr:'-meden önce', category:'sub', examples:[
+    { prompt:'Wasch dir die Hände, ___ du isst.', answer:'bevor', full:'Wasch dir die Hände, bevor du isst.' },
+    { prompt:'Ich putze mir die Zähne, ___ ich schlafen gehe.', answer:'bevor', full:'Ich putze mir die Zähne, bevor ich schlafen gehe.' },
+    { prompt:'___ wir den Vertrag unterschreiben, lesen wir ihn genau.', answer:'bevor', full:'Bevor wir den Vertrag unterschreiben, lesen wir ihn genau.' },
+    { prompt:'Triff eine Entscheidung, ___ es zu spät ist.', answer:'bevor', full:'Triff eine Entscheidung, bevor es zu spät ist.' },
+    { prompt:'Ich rufe dich an, ___ ich losfahre.', answer:'bevor', full:'Ich rufe dich an, bevor ich losfahre.' },
+    { prompt:'___ der Winter kommt, müssen wir das Dach reparieren.', answer:'bevor', full:'Bevor der Winter kommt, müssen wir das Dach reparieren.' },
+    { prompt:'Zieh deine Jacke an, ___ du nach draußen gehst.', answer:'bevor', full:'Zieh deine Jacke an, bevor du nach draußen gehst.' },
+    { prompt:'___ ich zur Arbeit gehe, bringe ich die Kinder weg.', answer:'bevor', full:'Bevor ich zur Arbeit gehe, bringe ich die Kinder weg.' },
+    { prompt:'Wir müssen einkaufen, ___ die Geschäfte schließen.', answer:'bevor', full:'Wir müssen einkaufen, bevor die Geschäfte schließen.' },
+    { prompt:'___ du antwortest, solltest du kurz nachdenken.', answer:'bevor', full:'Bevor du antwortest, solltest du kurz nachdenken.' },
+    { prompt:'Ich mache die Fenster zu, ___ ich das Haus verlasse.', answer:'bevor', full:'Ich mache die Fenster zu, bevor ich das Haus verlasse.' },
+    { prompt:'___ es regnet, bringen wir die Wäsche rein.', answer:'bevor', full:'Bevor es regnet, bringen wir die Wäsche rein.' },
+    { prompt:'Du solltest dich ausruhen, ___ die Party beginnt.', answer:'bevor', full:'Du solltest dich ausruhen, bevor die Party beginnt.' },
+    { prompt:'___ wir essen, deckst du bitte den Tisch?', answer:'bevor', full:'Bevor wir essen, deckst du bitte den Tisch?' },
+    { prompt:'Ich möchte dich sehen, ___ du verreist.', answer:'bevor', full:'Ich möchte dich sehen, bevor du verreist.' },
+    { prompt:'___ du den Computer ausschaltest, speichere deine Arbeit.', answer:'bevor', full:'Bevor du den Computer ausschaltest, speichere deine Arbeit.' },
+    { prompt:'Wir machen ein Foto, ___ die Sonne untergeht.', answer:'bevor', full:'Wir machen ein Foto, bevor die Sonne untergeht.' },
+    { prompt:'___ ich das Auto kaufe, mache ich eine Probefahrt.', answer:'bevor', full:'Bevor ich das Auto kaufe, mache ich eine Probefahrt.' },
+    { prompt:'Trink einen Schluck Wasser, ___ du losrennst.', answer:'bevor', full:'Trink einen Schluck Wasser, bevor du losrennst.' },
+    { prompt:'___ die Gäste kommen, müssen wir noch aufräumen.', answer:'bevor', full:'Bevor die Gäste kommen, müssen wir noch aufräumen.' }
+  ]},
+
+
+{ key:'nachdem', text:'nachdem', tr:'-dıktan sonra', category:'sub', examples:[
+    { prompt:'Ich gehe schlafen, ___ ich meine Hausaufgaben gemacht habe.', answer:'nachdem', full:'Ich gehe schlafen, nachdem ich meine Hausaufgaben gemacht habe.' },
+    { prompt:'Wir essen einen Nachtisch, ___ wir fertig gegessen haben.', answer:'nachdem', full:'Wir essen einen Nachtisch, nachdem wir fertig gegessen haben.' },
+    { prompt:'Er fühlt sich besser, ___ er die Medizin genommen hat.', answer:'nachdem', full:'Er fühlt sich besser, nachdem er die Medizin genommen hat.' },
+    { prompt:'___ ich geduscht hatte, fühlte ich mich frisch.', answer:'nachdem', full:'Nachdem ich geduscht hatte, fühlte ich mich frisch.' },
+    { prompt:'Wir gehen spazieren, ___ es aufgehört hat zu regnen.', answer:'nachdem', full:'Wir gehen spazieren, nachdem es aufgehört hat zu regnen.' },
+    { prompt:'Ich rufe dich an, ___ ich angekommen bin.', answer:'nachdem', full:'Ich rufe dich an, nachdem ich angekommen bin.' },
+    { prompt:'___ er das Auto gewaschen hatte, fing es an zu regnen.', answer:'nachdem', full:'Nachdem er das Auto gewaschen hatte, fing es an zu regnen.' },
+    { prompt:'Du darfst spielen, ___ du dein Zimmer aufgeräumt hast.', answer:'nachdem', full:'Du darfst spielen, nachdem du dein Zimmer aufgeräumt hast.' },
+    { prompt:'___ wir den Film gesehen hatten, haben wir darüber diskutiert.', answer:'nachdem', full:'Nachdem wir den Film gesehen hatten, haben wir darüber diskutiert.' },
+    { prompt:'Ich trinke einen Tee, ___ ich Sport gemacht habe.', answer:'nachdem', full:'Ich trinke einen Tee, nachdem ich Sport gemacht habe.' },
+    { prompt:'___ sie die Prüfung bestanden hatte, feierte sie eine Party.', answer:'nachdem', full:'Nachdem sie die Prüfung bestanden hatte, feierte sie eine Party.' },
+    { prompt:'Wir haben den Vertrag unterschrieben, ___ wir ihn gelesen haben.', answer:'nachdem', full:'Wir haben den Vertrag unterschrieben, nachdem wir ihn gelesen haben.' },
+    { prompt:'Ich gehe einkaufen, ___ ich die Küche geputzt habe.', answer:'nachdem', full:'Ich gehe einkaufen, nachdem ich die Küche geputzt habe.' },
+    { prompt:'___ er die Nachricht erhalten hatte, rief er sofort zurück.', answer:'nachdem', full:'Nachdem er die Nachricht erhalten hatte, rief er sofort zurück.' },
+    { prompt:'Wir können losfahren, ___ du deine Schuhe angezogen hast.', answer:'nachdem', full:'Wir können losfahren, nachdem du deine Schuhe angezogen hast.' },
+    { prompt:'Ich fühle mich fit, ___ ich gefrühstückt habe.', answer:'nachdem', full:'Ich fühle mich fit, nachdem ich gefrühstückt habe.' },
+    { prompt:'___ wir lange gesucht hatten, fanden wir den Schlüssel.', answer:'nachdem', full:'Nachdem wir lange gesucht hatten, fanden wir den Schlüssel.' },
+    { prompt:'Er geht zur Arbeit, ___ er die Kinder weggebracht hat.', answer:'nachdem', full:'Er geht zur Arbeit, nachdem er die Kinder weggebracht hat.' },
+    { prompt:'___ ich das Buch gelesen hatte, gab ich es dir zurück.', answer:'nachdem', full:'Nachdem ich das Buch gelesen hatte, gab ich es dir zurück.' },
+    { prompt:'Wir machen eine Pause, ___ wir die Arbeit beendet haben.', answer:'nachdem', full:'Wir machen eine Pause, nachdem wir die Arbeit beendet haben.' }
+  ]},
+  
+{ key:'falls', text:'falls', tr:'olur da ... ise / eğer', category:'sub', examples:[
+    { prompt:'Ruf mich bitte an, ___ du später kommst.', answer:'falls', full:'Ruf mich bitte an, falls du später kommst.' },
+    { prompt:'Nimm einen Regenschirm mit, ___ es regnet.', answer:'falls', full:'Nimm einen Regenschirm mit, falls es regnet.' },
+    { prompt:'Ich kaufe Brot, ___ wir noch welches brauchen.', answer:'falls', full:'Ich kaufe Brot, falls wir noch welches brauchen.' },
+    { prompt:'Bitte sag mir Bescheid, ___ du Hilfe benötigst.', answer:'falls', full:'Bitte sag mir Bescheid, falls du Hilfe benötigst.' },
+    { prompt:'Wir können morgen grillen, ___ das Wetter gut ist.', answer:'falls', full:'Wir können morgen grillen, falls das Wetter gut ist.' },
+    { prompt:'Ich schreibe dir eine Nachricht, ___ ich den Schlüssel finde.', answer:'falls', full:'Ich schreibe dir eine Nachricht, falls ich den Schlüssel finde.' },
+    { prompt:'Hinterlassen Sie eine Nachricht, ___ ich nicht erreichbar bin.', answer:'falls', full:'Hinterlassen Sie eine Nachricht, falls ich nicht erreichbar bin.' },
+    { prompt:'Frag bitte den Lehrer, ___ du die Aufgabe nicht verstehst.', answer:'falls', full:'Frag bitte den Lehrer, falls du die Aufgabe nicht verstehst.' },
+    { prompt:'Ich bringe Pizza mit, ___ du noch keinen Hunger hast.', answer:'falls', full:'Ich bringe Pizza mit, falls du noch keinen Hunger hast.' },
+    { prompt:'Gib mir bitte das Buch zurück, ___ du es fertig gelesen hast.', answer:'falls', full:'Gib mir bitte das Buch zurück, falls du es fertig gelesen hast.' },
+    { prompt:'Komm einfach vorbei, ___ du heute Zeit hast.', answer:'falls', full:'Komm einfach vorbei, falls du heute Zeit hast.' },
+    { prompt:'Ich kann dich abholen, ___ dein Auto kaputt ist.', answer:'falls', full:'Ich kann dich abholen, falls dein Auto kaputt ist.' },
+    { prompt:'Schreib die Adresse auf, ___ du den Weg vergisst.', answer:'falls', full:'Schreib die Adresse auf, falls du den Weg vergisst.' },
+    { prompt:'Wir gehen ohne ihn los, ___ er nicht pünktlich kommt.', answer:'falls', full:'Wir gehen ohne ihn los, falls er nicht pünktlich kommt.' },
+    { prompt:'Trink viel Wasser, ___ es heute sehr heiß wird.', answer:'falls', full:'Trink viel Wasser, falls es heute sehr heiß wird.' },
+    { prompt:'Ich kaufe zwei Tickets, ___ du mitkommen möchtest.', answer:'falls', full:'Ich kaufe zwei Tickets, falls du mitkommen möchtest.' },
+    { prompt:'Bitte schließ das Fenster, ___ du das Haus verlässt.', answer:'falls', full:'Bitte schließ das Fenster, falls du das Haus verlässt.' },
+    { prompt:'Ich reserviere einen Tisch, ___ das Restaurant voll ist.', answer:'falls', full:'Ich reserviere einen Tisch, falls das Restaurant voll ist.' },
+    { prompt:'Bring bitte Wein mit, ___ du im Supermarkt bist.', answer:'falls', full:'Bring bitte Wein mit, falls du im Supermarkt bist.' },
+    { prompt:'Ich leihe dir meine Jacke, ___ dir kalt ist.', answer:'falls', full:'Ich leihe dir meine Jacke, falls dir kalt ist.' }
+  ]},
+
+
+{ key:'ob', text:'ob', tr:'-ıp -madığı', category:'sub', examples:[
+    { prompt:'Ich weiß nicht, ___ er heute kommt.', answer:'ob', full:'Ich weiß nicht, ob er heute kommt.' },
+    { prompt:'Kannst du mal sehen, ___ die Post schon da ist?', answer:'ob', full:'Kannst du mal sehen, ob die Post schon da ist?' },
+    { prompt:'Frag ihn bitte, ___ er Hilfe braucht.', answer:'ob', full:'Frag ihn bitte, ob er Hilfe braucht.' },
+    { prompt:'Ich bin mir nicht sicher, ___ das Fenster zu ist.', answer:'ob', full:'Ich bin mir nicht sicher, ob das Fenster zu ist.' },
+    { prompt:'Es ist egal, ___ es regnet oder die Sonne scheint.', answer:'ob', full:'Es ist egal, ob es regnet oder die Sonne scheint.' },
+    { prompt:'Weißt du schon, ___ du mitkommen kannst?', answer:'ob', full:'Weißt du schon, ob du mitkommen kannst?' },
+    { prompt:'Ich möchte wissen, ___ der Zug pünktlich abfährt.', answer:'ob', full:'Ich möchte wissen, ob der Zug pünktlich abfährt.' },
+    { prompt:'Prüfe bitte, ___ wir noch genug Milch haben.', answer:'ob', full:'Prüfe bitte, ob wir noch genug Milch haben.' },
+    { prompt:'Sag mir Bescheid, ___ du den Job bekommen hast.', answer:'ob', full:'Sag mir Bescheid, ob du den Job bekommen hast.' },
+    { prompt:'Er hat nicht gesagt, ___ er alleine kommt.', answer:'ob', full:'Er hat nicht gesagt, ob er alleine kommt.' },
+    { prompt:'Ich frage mich, ___ wir uns bald wiedersehen.', answer:'ob', full:'Ich frage mich, ob wir uns bald wiedersehen.' },
+    { prompt:'Es ist noch unklar, ___ die Party stattfindet.', answer:'ob', full:'Es ist noch unklar, ob die Party stattfindet.' },
+    { prompt:'Können Sie mir sagen, ___ das Hotel noch frei ist?', answer:'ob', full:'Können Sie mir sagen, ob das Hotel noch frei ist?' },
+    { prompt:'Ich schaue kurz nach, ___ das Essen fertig ist.', answer:'ob', full:'Ich schaue kurz nach, ob das Essen fertig ist.' },
+    { prompt:'Niemand weiß genau, ___ er die Wahrheit sagt.', answer:'ob', full:'Niemand weiß genau, ob er die Wahrheit sagt.' },
+    { prompt:'Überleg dir gut, ___ du das wirklich willst.', answer:'ob', full:'Überleg dir gut, ob du das wirklich willst.' },
+    { prompt:'Ich möchte prüfen, ___ die Adresse richtig ist.', answer:'ob', full:'Ich möchte prüfen, ob die Adresse richtig ist.' },
+    { prompt:'Weißt du, ___ das Geschäft am Sonntag offen hat?', answer:'ob', full:'Weißt du, ob das Geschäft am Sonntag offen hat?' },
+    { prompt:'Ich habe keine Ahnung, ___ das Paket schon angekommen ist.', answer:'ob', full:'Ich habe keine Ahnung, ob das Paket schon angekommen ist.' },
+    { prompt:'Frag mal nach, ___ der Chef heute im Büro ist.', answer:'ob', full:'Frag mal nach, ob der Chef heute im Büro ist.' }
+  ]},
+
+  { key:'seitdem', text:'seitdem', tr:'-den beri', category:'sub', examples:[
+    { prompt:'Ich fühle mich fitter, ___ ich jeden Morgen jogge.', answer:'seitdem', full:'Ich fühle mich fitter, seitdem ich jeden Morgen jogge.' },
+    { prompt:'Er ist viel glücklicher, ___ er in Berlin wohnt.', answer:'seitdem', full:'Er ist viel glücklicher, seitdem er in Berlin wohnt.' },
+    { prompt:'___ ich kein Fleisch mehr esse, habe ich mehr Energie.', answer:'seitdem', full:'Seitdem ich kein Fleisch mehr esse, habe ich mehr Energie.' },
+    { prompt:'Wir haben uns nicht gesehen, ___ wir die Schule beendet haben.', answer:'seitdem', full:'Wir haben uns nicht gesehen, seitdem wir die Schule beendet haben.' },
+    { prompt:'Sie spricht viel besser Deutsch, ___ sie den Kurs besucht.', answer:'seitdem', full:'Sie spricht viel besser Deutsch, seitdem sie den Kurs besucht.' },
+    { prompt:'___ er das neue Handy hat, spielt er nur noch damit.', answer:'seitdem', full:'Seitdem er das neue Handy hat, spielt er nur noch damit.' },
+    { prompt:'Ich trinke keinen Kaffee mehr, ___ ich Magenprobleme hatte.', answer:'seitdem', full:'Ich trinke keinen Kaffee mehr, seitdem ich Magenprobleme hatte.' },
+    { prompt:'___ wir ein Kind haben, schlafen wir nachts weniger.', answer:'seitdem', full:'Seitdem wir ein Kind haben, schlafen wir nachts weniger.' },
+    { prompt:'Es ist viel ruhiger hier, ___ die Baustelle weg ist.', answer:'seitdem', full:'Es ist viel ruhiger hier, seitdem die Baustelle weg ist.' },
+    { prompt:'___ ich diese App nutze, lerne ich viel schneller.', answer:'seitdem', full:'Seitdem ich diese App nutze, lerne ich viel schneller.' },
+    { prompt:'Er raucht nicht mehr, ___ sein Sohn geboren wurde.', answer:'seitdem', full:'Er raucht nicht mehr, seitdem sein Sohn geboren wurde.' },
+    { prompt:'___ wir den Hund haben, gehen wir öfter im Wald spazieren.', answer:'seitdem', full:'Seitdem wir den Hund haben, gehen wir öfter im Wald spazieren.' },
+    { prompt:'Ich spare viel Geld, ___ ich mein Essen selbst koche.', answer:'seitdem', full:'Ich spare viel Geld, seitdem ich mein Essen selbst koche.' },
+    { prompt:'___ sie die Brille trägt, kann sie wieder gut lesen.', answer:'seitdem', full:'Seitdem sie die Brille trägt, kann sie wieder gut lesen.' },
+    { prompt:'Wir sind beste Freunde, ___ wir uns im Urlaub getroffen haben.', answer:'seitdem', full:'Wir sind beste Freunde, seitdem wir uns im Urlaub getroffen haben.' },
+    { prompt:'___ die neue Chefin da ist, macht die Arbeit mehr Spaß.', answer:'seitdem', full:'Seitdem die neue Chefin da ist, macht die Arbeit mehr Spaß.' },
+    { prompt:'Ich trage keine Uhr mehr, ___ mein Handy alles anzeigt.', answer:'seitdem', full:'Ich trage keine Uhr mehr, seitdem mein Handy alles anzeigt.' },
+    { prompt:'___ wir in dieser Wohnung leben, fühlen wir uns wohl.', answer:'seitdem', full:'Seitdem wir in dieser Wohnung leben, fühlen wir uns wohl.' },
+    { prompt:'Er hat keine Schmerzen mehr, ___ er täglich Sport macht.', answer:'seitdem', full:'Er hat keine Schmerzen mehr, seitdem er täglich Sport macht.' },
+    { prompt:'___ der Sommer angefangen hat, ist das Schwimmbad immer voll.', answer:'seitdem', full:'Seitdem der Sommer angefangen hat, ist das Schwimmbad immer voll.' }
+  ]},
+
+
+{ key:'während', text:'während', tr:'-ırken / bu sırada', category:'sub', examples:[
+    { prompt:'Ich höre Musik, ___ ich die Wohnung aufräume.', answer:'während', full:'Ich höre Musik, während ich die Wohnung aufräume.' },
+    { prompt:'Er schläft, ___ wir den Film schauen.', answer:'während', full:'Er schläft, während wir den film schauen.' },
+    { prompt:'Ich koche das Essen, ___ du den Tisch deckst.', answer:'während', full:'Ich koche das Essen, während du den Tisch deckst.' },
+    { prompt:'Wir unterhalten uns, ___ wir auf den Bus warten.', answer:'während', full:'Wir unterhalten uns, während wir auf den Bus warten.' },
+    { prompt:'Sie liest ein Buch, ___ ihr Kind im Garten spielt.', answer:'während', full:'Sie liest ein Buch, während ihr Kind im Garten spielt.' },
+    { prompt:'Ich trinke einen Kaffee, ___ ich die Zeitung lese.', answer:'während', full:'Ich trinke einen Kaffee, während ich die Zeitung lese.' },
+    { prompt:'Es hat geregnet, ___ wir im Kino waren.', answer:'während', full:'Es hat geregnet, während wir im Kino waren.' },
+    { prompt:'Du kannst duschen, ___ ich das Frühstück vorbereite.', answer:'während', full:'Du kannst duschen, während ich das Frühstück vorbereite.' },
+    { prompt:'Er telefoniert, ___ er mit dem Auto fährt.', answer:'während', full:'Er telefoniert, während er mit dem Auto fährt.' },
+    { prompt:'Wir haben viel gelacht, ___ wir zusammen gegessen haben.', answer:'während', full:'Wir haben viel gelacht, während wir zusammen gegessen haben.' },
+    { prompt:'Ich lerne Vokabeln, ___ ich Sport mache.', answer:'während', full:'Ich lerne Vokabeln, während ich Sport mache.' },
+    { prompt:'Die Sonne scheint, ___ es leise schneit.', answer:'während', full:'Die Sonne scheint, während es leise schneit.' },
+    { prompt:'Ich denke an dich, ___ ich arbeite.', answer:'während', full:'Ich denke an dich, während ich arbeite.' },
+    { prompt:'Sie hat gesungen, ___ sie das Baby badete.', answer:'während', full:'Sie hat gesungen, während sie das Baby badete.' },
+    { prompt:'Wir machen eine Pause, ___ die Maschine läuft.', answer:'während', full:'Wir machen eine Pause, während die Maschine läuft.' },
+    { prompt:'Ich habe geduscht, ___ mein Handy klingelte.', answer:'während', full:'Ich habe geduscht, während mein Handy klingelte.' },
+    { prompt:'Du solltest nicht sprechen, ___ du isst.', answer:'während', full:'Du solltest nicht sprechen, während du isst.' },
+    { prompt:'Er schreibt die E-Mail, ___ ich die Adresse suche.', answer:'während', full:'Er schreibt die E-Mail, während ich die Adresse suche.' },
+    { prompt:'Ich genieße die Ruhe, ___ alle anderen schlafen.', answer:'während', full:'Ich genieße die Ruhe, während alle anderen schlafen.' },
+    { prompt:'Wir haben die Aussicht genossen, ___ wir wanderten.', answer:'während', full:'Wir haben die Aussicht genossen, während wir wanderten.' }
+  ]},
+
+
+{ key:'als', text:'als', tr:'-dığında (geçmişte tek sefer)', category:'sub', examples:[
+    { prompt:'Ich war sehr glücklich, ___ ich mein erstes Auto kaufte.', answer:'als', full:'Ich war sehr glücklich, als ich mein erstes Auto kaufte.' },
+    { prompt:'Wir wohnten noch in Berlin, ___ wir uns kennengelernt haben.', answer:'als', full:'Wir wohnten noch in Berlin, als wir uns kennengelernt haben.' },
+    { prompt:'Ich hatte viel Freizeit, ___ ich ein Kind war.', answer:'als', full:'Ich hatte viel Freizeit, als ich ein Kind war.' },
+    { prompt:'Es hat geregnet, ___ wir gestern angekommen sind.', answer:'als', full:'Es hat geregnet, als wir gestern angekommen sind.' },
+    { prompt:'Ich habe laut gelacht, ___ er den Witz erzählte.', answer:'als', full:'Ich habe laut gelacht, als er den Witz erzählte.' },
+    { prompt:'Meine Eltern waren im Urlaub, ___ ich das Haus putzte.', answer:'als', full:'Meine Eltern waren im Urlaub, als ich das Haus putzte.' },
+    { prompt:'Ich war gerade beim Bäcker, ___ du angerufen hast.', answer:'als', full:'Ich war gerade beim Bäcker, als du angerufen hast.' },
+    { prompt:'Wir haben viel getanzt, ___ wir auf der Party waren.', answer:'als', full:'Wir haben viel getanzt, als wir auf der Party waren.' },
+    { prompt:'Ich war sehr nervös, ___ die Prüfung begann.', answer:'als', full:'Ich war sehr nervös, als die Prüfung begann.' },
+    { prompt:'Es war schon dunkel, ___ er nach Hause kam.', answer:'als', full:'Es war schon dunkel, als er nach Hause kam.' },
+    { prompt:'Ich habe ihn sofort erkannt, ___ ich ihn sah.', answer:'als', full:'Ich habe ihn sofort erkannt, als ich ihn sah.' },
+    { prompt:'Wir haben in einem Hotel geschlafen, ___ wir in Paris waren.', answer:'als', full:'Wir haben in einem Hotel geschlafen, als wir in Paris waren.' },
+    { prompt:'Ich war zehn Jahre alt, ___ ich schwimmen lernte.', answer:'als', full:'Ich war zehn Jahre alt, als ich schwimmen lernte.' },
+    { prompt:'Es war sehr heiß, ___ wir im August in Rom waren.', answer:'als', full:'Es war sehr heiß, als wir im August in Rom waren.' },
+    { prompt:'Ich habe meine Tasche vergessen, ___ ich aus dem Bus stieg.', answer:'als', full:'Ich habe meine Tasche vergessen, als ich aus dem Bus stieg.' },
+    { prompt:'Wir waren sehr traurig, ___ der Urlaub zu Ende war.', answer:'als', full:'Wir waren sehr traurig, als der Urlaub zu Ende war.' },
+    { prompt:'Ich habe viel gelernt, ___ ich an der Universität war.', answer:'als', full:'Ich habe viel gelernt, als ich an der Universität war.' },
+    { prompt:'Es war Liebe auf den ersten Blick, ___ ich sie traf.', answer:'als', full:'Es war Liebe auf den ersten Blick, als ich sie traf.' },
+    { prompt:'Ich habe geschlafen, ___ es an der Tür klopfte.', answer:'als', full:'Ich habe geschlafen, als es an der Tür klopfte.' },
+    { prompt:'Wir haben uns sehr gefreut, ___ wir das Geschenk öffneten.', answer:'als', full:'Wir haben uns sehr gefreut, als wir das Geschenk öffneten.' }
+  ]},
+
+
+  { key:'sowohl_als_auch', text:'sowohl ... als auch', tr:'hem ... hem de', category:'doppel', examples:[
+    { prompt:'Ich trinke ___ Tee ___ Kaffee.', answer:'sowohl / als auch', full:'Ich trinke sowohl Tee als auch Kaffee.' },
+    { prompt:'Er spricht ___ Deutsch ___ Englisch.', answer:'sowohl / als auch', full:'Er spricht sowohl Deutsch als auch Englisch.' },
+    { prompt:'Wir haben ___ Zeit ___ Lust.', answer:'sowohl / als auch', full:'Wir haben sowohl Zeit als auch Lust.' },
+    { prompt:'Das Essen war ___ lecker ___ billig.', answer:'sowohl / als auch', full:'Das Essen war sowohl lecker als auch billig.' },
+    { prompt:'Sie mag ___ Hunde ___ Katzen.', answer:'sowohl / als auch', full:'Sie mag sowohl Hunde als auch Katzen.' },
+    { prompt:'Ich brauche ___ einen Kuli ___ ein Blatt Papier.', answer:'sowohl / als auch', full:'Ich brauche sowohl einen Kuli als auch ein Blatt Papier.' },
+    { prompt:'Er arbeitet ___ in Berlin ___ in Potsdam.', answer:'sowohl / als auch', full:'Er arbeitet sowohl in Berlin als auch in Potsdam.' },
+    { prompt:'Wir besuchen ___ meine Eltern ___ meine Großeltern.', answer:'sowohl / als auch', full:'Wir besuchen sowohl meine Eltern als auch meine Großeltern.' },
+    { prompt:'Das Hotel ist ___ modern ___ gemütlich.', answer:'sowohl / als auch', full:'Das Hotel ist sowohl modern als auch gemütlich.' },
+    { prompt:'Ich lerne ___ am Vormittag ___ am Nachmittag.', answer:'sowohl / als auch', full:'Ich lerne sowohl am Vormittag als auch am Nachmittag.' },
+    { prompt:'Sie ist ___ intelligent ___ freundlich.', answer:'sowohl / als auch', full:'Sie ist sowohl intelligent als auch freundlich.' },
+    { prompt:'Er kauft ___ Äpfel ___ Bananen.', answer:'sowohl / als auch', full:'Er kauft sowohl Äpfel als auch Bananen.' },
+    { prompt:'Wir haben ___ ein Auto ___ ein Fahrrad.', answer:'sowohl / als auch', full:'Wir haben sowohl ein Auto als auch ein Fahrrad.' },
+    { prompt:'Ich gehe ___ ins Kino ___ ins Theater.', answer:'sowohl / als auch', full:'Ich gehe sowohl ins Kino als auch ins Theater.' },
+    { prompt:'Das Kind kann ___ lesen ___ schreiben.', answer:'sowohl / als auch', full:'Das Kind kann sowohl lesen als auch schreiben.' },
+    { prompt:'Ich brauche ___ Hilfe ___ Ruhe.', answer:'sowohl / als auch', full:'Ich brauche sowohl Hilfe als auch Ruhe.' },
+    { prompt:'Der Kurs findet ___ Montag ___ Mittwoch statt.', answer:'sowohl / als auch', full:'Der Kurs findet sowohl Montag als auch Mittwoch statt.' },
+    { prompt:'Sie spielt ___ Klavier ___ Gitarre.', answer:'sowohl / als auch', full:'Sie spielt sowohl Klavier als auch Gitarre.' },
+    { prompt:'Ich mag ___ den Sommer ___ den Winter.', answer:'sowohl / als auch', full:'Ich mag sowohl den Sommer als auch den Winter.' },
+    { prompt:'Das Kleid ist ___ blau ___ grün.', answer:'sowohl / als auch', full:'Das Kleid ist sowohl blau als auch grün.' }
+  ]},
+
+
+
+{ key:'zwar_aber', text:'zwar ... aber', tr:'her ne kadar ... olsa da / ... ama', category:'doppel', examples:[
+    { prompt:'Das Auto ist ___ alt, ___ es fährt gut.', answer:'zwar / aber', full:'Das Auto ist zwar alt, aber es fährt gut.' },
+    { prompt:'Ich habe ___ Hunger, ___ ich möchte jetzt nicht essen.', answer:'zwar / aber', full:'Ich habe zwar Hunger, aber ich möchte jetzt nicht essen.' },
+    { prompt:'Der Film ist ___ lang, ___ sehr interessant.', answer:'zwar / aber', full:'Der Film ist zwar lang, aber sehr interessant.' },
+    { prompt:'Sie spricht ___ Deutsch, ___ noch nicht perfekt.', answer:'zwar / aber', full:'Sie spricht zwar Deutsch, aber noch nicht perfekt.' },
+    { prompt:'Das Handy ist ___ teuer, ___ die Qualität ist super.', answer:'zwar / aber', full:'Das Handy ist zwar teuer, aber die Qualität ist super.' },
+    { prompt:'Ich bin ___ müde, ___ ich muss noch arbeiten.', answer:'zwar / aber', full:'Ich bin zwar müde, aber ich muss noch arbeiten.' },
+    { prompt:'Es regnet ___ ein bisschen, ___ wir gehen trotzdem raus.', answer:'zwar / aber', full:'Es regnet zwar ein bisschen, aber wir gehen trotzdem raus.' },
+    { prompt:'Die Wohnung ist ___ klein, ___ sie liegt sehr zentral.', answer:'zwar / aber', full:'Die Wohnung ist zwar klein, aber sie liegt sehr zentral.' },
+    { prompt:'Er ist ___ nett, ___ manchmal sehr unpünktlich.', answer:'zwar / aber', full:'Er ist zwar nett, aber manchmal sehr unpünktlich.' },
+    { prompt:'Ich trinke ___ Kaffee, ___ nur mit viel Milch.', answer:'zwar / aber', full:'Ich trinke zwar Kaffee, aber nur mit viel Milch.' },
+    { prompt:'Das Hotel war ___ billig, ___ nicht sehr sauber.', answer:'zwar / aber', full:'Das Hotel war zwar billig, aber nicht sehr sauber.' },
+    { prompt:'Wir haben ___ Zeit, ___ wir haben keine Lust.', answer:'zwar / aber', full:'Wir haben zwar Zeit, aber wir haben keine Lust.' },
+    { prompt:'Sie hat ___ ein Auto, ___ sie fährt meistens mit dem Bus.', answer:'zwar / aber', full:'Sie hat zwar ein Auto, aber sie fährt meistens mit dem Bus.' },
+    { prompt:'Ich lerne ___ viel, ___ ich vergesse oft die Vokabeln.', answer:'zwar / aber', full:'Ich lerne zwar viel, aber ich vergesse oft die Vokabeln.' },
+    { prompt:'Das Essen schmeckt ___ gut, ___ es ist zu scharf.', answer:'zwar / aber', full:'Das Essen schmeckt zwar gut, aber es ist zu scharf.' },
+    { prompt:'Der Kurs ist ___ schwierig, ___ er macht Spaß.', answer:'zwar / aber', full:'Der Kurs ist zwar schwierig, aber er macht Spaß.' },
+    { prompt:'Ich kenne ihn ___, ___ ich weiß seinen Namen nicht.', answer:'zwar / aber', full:'Ich kenne ihn zwar, aber ich weiß seinen Namen nicht.' },
+    { prompt:'Es ist ___ Sommer, ___ heute ist es ziemlich kühl.', answer:'zwar / aber', full:'Es ist zwar Sommer, aber heute ist es ziemlich kühl.' },
+    { prompt:'Das Kleid ist ___ schön, ___ es passt mir nicht.', answer:'zwar / aber', full:'Das Kleid ist zwar schön, aber es passt mir nicht.' },
+    { prompt:'Er arbeitet ___ viel, ___ er verdient nicht genug Geld.', answer:'zwar / aber', full:'Er arbeitet zwar viel, aber er verdient nicht genug Geld.' }
+  ]},
+
+
+{ key:'entweder_oder', text:'entweder ... oder', tr:'ya ... ya da', category:'doppel', examples:[
+    { prompt:'Ich trinke ___ einen Saft ___ ein Wasser.', answer:'entweder / oder', full:'Ich trinke entweder einen Saft oder ein Wasser.' },
+    { prompt:'Er kommt ___ heute ___ morgen.', answer:'entweder / oder', full:'Er kommt entweder heute oder morgen.' },
+    { prompt:'Wir gehen ___ ins Kino ___ ins Theater.', answer:'entweder / oder', full:'Wir gehen entweder ins Kino oder ins Theater.' },
+    { prompt:'Du isst ___ dein Gemüse ___ du bekommst keinen Nachtisch.', answer:'entweder / oder', full:'Du isst entweder dein Gemüse oder du bekommst keinen Nachtisch.' },
+    { prompt:'Sie wohnt ___ in Berlin ___ in Hamburg.', answer:'entweder / oder', full:'Sie wohnt entweder in Berlin oder in Hamburg.' },
+    { prompt:'Ich kaufe ___ das blaue Kleid ___ das rote Kleid.', answer:'entweder / oder', full:'Ich kaufe entweder das blaue Kleid oder das rote Kleid.' },
+    { prompt:'Wir fahren ___ mit dem Bus ___ mit dem Zug.', answer:'entweder / oder', full:'Wir fahren entweder mit dem Bus oder mit dem Zug.' },
+    { prompt:'Er studiert ___ Medizin ___ Jura.', answer:'entweder / oder', full:'Er studiert entweder Medizin oder Jura.' },
+    { prompt:'Ruf mich ___ an ___ schreib mir eine Nachricht.', answer:'entweder / oder', full:'Ruf mich entweder an oder schreib mir eine Nachricht.' },
+    { prompt:'Das Wetter wird ___ besser ___ schlechter.', answer:'entweder / oder', full:'Das Wetter wird entweder besser oder schlechter.' },
+    { prompt:'Entscheide dich: ___ wir bleiben hier ___ wir gehen nach Hause.', answer:'entweder / oder', full:'Entscheide dich: entweder wir bleiben hier oder wir gehen nach Hause.' },
+    { prompt:'Ich brauche ___ einen neuen Laptop ___ ein Tablet.', answer:'entweder / oder', full:'Ich brauche entweder einen neuen Laptop oder ein Tablet.' },
+    { prompt:'Sie spielt ___ Tennis ___ Golf.', answer:'entweder / oder', full:'Sie spielt entweder Tennis oder Golf.' },
+    { prompt:'Entweder du hilfst mir ___ ich mache es allein.', answer:'entweder / oder', full:'Entweder du hilfst mir oder ich mache es allein.' },
+    { prompt:'Wir essen ___ Pizza ___ Pasta.', answer:'entweder / oder', full:'Wir essen entweder Pizza oder Pasta.' },
+    { prompt:'Ich fliege ___ nach Spanien ___ nach Italien.', answer:'entweder / oder', full:'Ich fliege entweder nach Spanien oder nach Italien.' },
+    { prompt:'Er ist ___ im Büro ___ er arbeitet von zu Hause.', answer:'entweder / oder', full:'Er ist entweder im Büro oder er arbeitet von zu Hause.' },
+    { prompt:'Trink ___ einen Tee ___ einen Kaffee.', answer:'entweder / oder', full:'Trink entweder einen Tee oder einen Kaffee.' },
+    { prompt:'Das Handy ist ___ kaputt ___ der Akku ist leer.', answer:'entweder / oder', full:'Das Handy ist entweder kaputt oder der Akku ist leer.' },
+    { prompt:'Entweder wir gewinnen ___ wir verlieren.', answer:'entweder / oder', full:'Entweder wir gewinnen oder wir verlieren.' }
+  ]},
+
+
+{ key:'weder_noch', text:'weder ... noch', tr:'ne ... ne de', category:'doppel', examples:[
+    { prompt:'Ich trinke ___ Kaffee ___ Tee.', answer:'weder / noch', full:'Ich trinke weder Kaffee noch Tee.' },
+    { prompt:'Er spricht ___ Englisch ___ Französisch.', answer:'weder / noch', full:'Er spricht weder Englisch noch Französisch.' },
+    { prompt:'Wir haben ___ Zeit ___ Geld.', answer:'weder / noch', full:'Wir haben weder Zeit noch Geld.' },
+    { prompt:'Das Wetter ist ___ schön ___ warm.', answer:'weder / noch', full:'Das Wetter ist weder schön noch warm.' },
+    { prompt:'Sie mag ___ Pizza ___ Pasta.', answer:'weder / noch', full:'Sie mag weder Pizza noch Pasta.' },
+    { prompt:'Ich brauche ___ Hilfe ___ Mitleid.', answer:'weder / noch', full:'Ich brauche weder Hilfe noch Mitleid.' },
+    { prompt:'Er arbeitet ___ in Berlin ___ in München.', answer:'weder / noch', full:'Er arbeitet weder in Berlin noch in München.' },
+    { prompt:'Wir besuchen ___ den Park ___ das Museum.', answer:'weder / noch', full:'Wir besuchen weder den Park noch das Museum.' },
+    { prompt:'Das Hotel ist ___ sauber ___ billig.', answer:'weder / noch', full:'Das Hotel ist weder sauber noch billig.' },
+    { prompt:'Ich lerne ___ Montag ___ Dienstag.', answer:'weder / noch', full:'Ich lerne weder Montag noch Dienstag.' },
+    { prompt:'Sie ist ___ groß ___ klein.', answer:'weder / noch', full:'Sie ist weder groß noch klein.' },
+    { prompt:'Er kauft ___ Fleisch ___ Fisch.', answer:'weder / noch', full:'Er kauft weder Fleisch noch Fisch.' },
+    { prompt:'Wir haben ___ ein Haus ___ eine Wohnung.', answer:'weder / noch', full:'Wir haben weder ein Haus noch eine Wohnung.' },
+    { prompt:'Ich gehe ___ ins Kino ___ ins Restaurant.', answer:'weder / noch', full:'Ich gehe weder ins Kino noch ins Restaurant.' },
+    { prompt:'Das Kind kann ___ schwimmen ___ radfahren.', answer:'weder / noch', full:'Das Kind kann weder schwimmen noch radfahren.' },
+    { prompt:'Ich möchte ___ Wein ___ Bier.', answer:'weder / noch', full:'Ich möchte weder Wein noch Bier.' },
+    { prompt:'Der Kurs findet ___ heute ___ morgen statt.', answer:'weder / noch', full:'Der Kurs findet weder heute noch morgen statt.' },
+    { prompt:'Sie spielt ___ Tennis ___ Fußball.', answer:'weder / noch', full:'Sie spielt weder Tennis noch Fußball.' },
+    { prompt:'Ich mag ___ den Regen ___ den Wind.', answer:'weder / noch', full:'Ich mag weder den Regen noch den Wind.' },
+    { prompt:'Das Handy ist ___ neu ___ teuer.', answer:'weder / noch', full:'Das Handy ist weder neu noch teuer.' }
+  ]},
+
+ { key:'nicht_nur_sondern_auch', text:'nicht nur ... sondern auch', tr:'sadece ... değil, aynı zamanda', category:'doppel', examples:[
+    { prompt:'Ich spreche ___ Deutsch, ___ Türkisch.', answer:'nicht nur / sondern auch', full:'Ich spreche nicht nur Deutsch, sondern auch Türkisch.' },
+    { prompt:'Das Haus ist ___ groß, ___ schön.', answer:'nicht nur / sondern auch', full:'Das Haus ist nicht nur groß, sondern auch schön.' },
+    { prompt:'Er ist ___ mein Kollege, ___ mein Freund.', answer:'nicht nur / sondern auch', full:'Er ist nicht nur mein Kollege, sondern auch mein Freund.' },
+    { prompt:'Wir haben ___ Hunger, ___ Durst.', answer:'nicht nur / sondern auch', full:'Wir haben nicht nur Hunger, sondern auch Durst.' },
+    { prompt:'Sie mag ___ Musik, ___ Kunst.', answer:'nicht nur / sondern auch', full:'Sie mag nicht nur Musik, sondern auch Kunst.' },
+    { prompt:'Das Essen war ___ lecker, ___ gesund.', answer:'nicht nur / sondern auch', full:'Das Essen war nicht nur lecker, sondern auch gesund.' },
+    { prompt:'Ich brauche ___ Ruhe, ___ Urlaub.', answer:'nicht nur / sondern auch', full:'Ich brauche nicht nur Ruhe, sondern auch Urlaub.' },
+    { prompt:'Er spielt ___ Fußball, ___ Basketball.', answer:'nicht nur / sondern auch', full:'Er spielt nicht nur Fußball, sondern auch Basketball.' },
+    { prompt:'Wir besuchen ___ Berlin, ___ Potsdam.', answer:'nicht nur / sondern auch', full:'Wir besuchen nicht nur Berlin, sondern auch Potsdam.' },
+    { prompt:'Das Handy ist ___ teuer, ___ alt.', answer:'nicht nur / sondern auch', full:'Das Handy ist nicht nur teuer, sondern auch alt.' },
+    { prompt:'Sie ist ___ intelligent, ___ mutig.', answer:'nicht nur / sondern auch', full:'Sie ist nicht nur intelligent, sondern auch mutig.' },
+    { prompt:'Ich trinke ___ Tee, ___ Kaffee.', answer:'nicht nur / sondern auch', full:'Ich trinke nicht nur Tee, sondern auch Kaffee.' },
+    { prompt:'Er kauft ___ Brot, ___ Milch.', answer:'nicht nur / sondern auch', full:'Er kauft nicht nur Brot, sondern auch Milch.' },
+    { prompt:'Wir haben ___ ein Auto, ___ ein Motorrad.', answer:'nicht nur / sondern auch', full:'Wir haben nicht nur ein Auto, sondern auch ein Motorrad.' },
+    { prompt:'Das Kind kann ___ singen, ___ tanzen.', answer:'nicht nur / sondern auch', full:'Das Kind kann nicht nur singen, sondern auch tanzen.' },
+    { prompt:'Ich lerne ___ Grammatik, ___ Vokabeln.', answer:'nicht nur / sondern auch', full:'Ich lerne nicht nur Grammatik, sondern auch Vokabeln.' },
+    { prompt:'Der Kurs ist ___ interessant, ___ hilfreich.', answer:'nicht nur / sondern auch', full:'Der Kurs ist nicht nur interessant, sondern auch hilfreich.' },
+    { prompt:'Sie arbeitet ___ schnell, ___ ordentlich.', answer:'nicht nur / sondern auch', full:'Sie arbeitet nicht nur schnell, sondern auch ordentlich.' },
+    { prompt:'Ich mag ___ den Sommer, ___ den Frühling.', answer:'nicht nur / sondern auch', full:'Ich mag nicht nur den Sommer, sondern auch den Frühling.' },
+    { prompt:'Das Kleid ist ___ elegant, ___ bequem.', answer:'nicht nur / sondern auch', full:'Das Kleid ist nicht nur elegant, sondern auch bequem.' }
+  ]},
+
+
+{ key:'je_desto', text:'je ... desto', tr:'ne kadar ... o kadar', category:'doppel', examples:[
+    { prompt:'___ mehr ich lerne, ___ besser werden meine Noten.', answer:'je / desto', full:'Je mehr ich lerne, desto besser werden meine Noten.' },
+    { prompt:'___ früher wir losfahren, ___ eher kommen wir an.', answer:'je / desto', full:'Je früher wir losfahren, desto eher kommen wir an.' },
+    { prompt:'___ länger ich schlafe, ___ fitter fühle ich mich.', answer:'je / desto', full:'Je länger ich schlafe, desto fitter fühle ich mich.' },
+    { prompt:'___ mehr Sport du machst, ___ gesünder lebst du.', answer:'je / desto', full:'Je mehr Sport du machst, desto gesünder lebst du.' },
+    { prompt:'___ kälter es ist, ___ mehr Tee trinke ich.', answer:'je / desto', full:'Je kälter es ist, desto mehr Tee trinke ich.' },
+    { prompt:'___ schneller er fährt, ___ gefährlicher ist es.', answer:'je / desto', full:'Je schneller er fährt, desto gefährlicher ist es.' },
+    { prompt:'___ öfter ich Deutsch spreche, ___ leichter fällt es mir.', answer:'je / desto', full:'Je öfter ich Deutsch spreche, desto leichter fällt es mir.' },
+    { prompt:'___ teurer das Auto ist, ___ moderner ist die Technik.', answer:'je / desto', full:'Je teurer das Auto ist, desto moderner ist die Technik.' },
+    { prompt:'___ mehr Zeit wir haben, ___ entspannter sind wir.', answer:'je / desto', full:'Je mehr Zeit wir haben, desto entspannter sind wir.' },
+    { prompt:'___ weniger man arbeitet, ___ mehr Freizeit hat man.', answer:'je / desto', full:'Je weniger man arbeitet, desto mehr Freizeit hat man.' },
+    { prompt:'___ dunkler es wird, ___ weniger kann ich sehen.', answer:'je / desto', full:'Je dunkler es wird, desto weniger kann ich sehen.' },
+    { prompt:'___ besser das Wetter ist, ___ mehr Leute sind im Park.', answer:'je / desto', full:'Je besser das Wetter ist, desto mehr Leute sind im Park.' },
+    { prompt:'___ kleiner die Wohnung ist, ___ weniger Miete zahlt man.', answer:'je / desto', full:'Je kleiner die Wohnung ist, desto weniger Miete zahlt man.' },
+    { prompt:'___ mehr ich trinke, ___ weniger Hunger habe ich.', answer:'je / desto', full:'Je mehr ich trinke, desto weniger Hunger habe ich.' },
+    { prompt:'___ lauter die Musik ist, ___ weniger kann ich schlafen.', answer:'je / desto', full:'Je lauter die Musik ist, desto weniger kann ich schlafen.' },
+    { prompt:'___ älter man wird, ___ klüger wird man hoffentlich.', answer:'je / desto', full:'Je älter man wird, desto klüger wird man hoffentlich.' },
+    { prompt:'___ schärfer das Essen ist, ___ mehr Wasser brauche ich.', answer:'je / desto', full:'Je schärfer das Essen ist, desto mehr Wasser brauche ich.' },
+    { prompt:'___ länger der Film dauert, ___ langweiliger wird er.', answer:'je / desto', full:'Je länger der Film dauert, desto langweiliger wird er.' },
+    { prompt:'___ höher wir steigen, ___ dünner wird die Luft.', answer:'je / desto', full:'Je höher wir steigen, desto dünner wird die Luft.' },
+    { prompt:'___ mehr man spart, ___ reicher wird man.', answer:'je / desto', full:'Je mehr man spart, desto reicher wird man.' }
+  ]},
+
+
+{ key:'jedoch', text:'jedoch', tr:'ancak', category:'pos0', examples:[
+    { prompt:'Die Wohnung ist schön. ___ ist sie zu teuer.', answer:'jedoch', full:'Die Wohnung ist schön. Jedoch ist sie zu teuer.' },
+    { prompt:'Er will kommen. ___ hat er keine Zeit.', answer:'jedoch', full:'Er will kommen. Jedoch hat er keine Zeit.' },
+    { prompt:'Das Projekt ist gut. ___ fehlt uns das Geld.', answer:'jedoch', full:'Das Projekt ist gut. Jedoch fehlt uns das Geld.' },
+    { prompt:'Ich mag Sport. ___ gehe ich nicht gerne joggen.', answer:'jedoch', full:'Ich mag Sport. Jedoch gehe ich nicht gerne joggen.' },
+    { prompt:'Wir haben gesucht. ___ haben wir nichts gefunden.', answer:'jedoch', full:'Wir haben gesucht. Jedoch haben wir nichts gefunden.' },
+    { prompt:'Der Wein ist lecker. ___ ist er sehr stark.', answer:'jedoch', full:'Der Wein ist lecker. Jedoch ist er sehr stark.' },
+    { prompt:'Sie lernt viel. ___ macht sie noch viele Fehler.', answer:'jedoch', full:'Sie lernt viel. Jedoch macht sie noch viele Fehler.' },
+    { prompt:'Das Wetter ist sonnig. ___ ist es sehr windig.', answer:'jedoch', full:'Das Wetter ist sonnig. Jedoch ist es sehr windig.' },
+    { prompt:'Er ist intelligent. ___ ist er manchmal unpünktlich.', answer:'jedoch', full:'Er ist intelligent. Jedoch ist er manchmal unpünktlich.' },
+    { prompt:'Ich verstehe dich. ___ kann ich dir nicht zustimmen.', answer:'jedoch', full:'Ich verstehe dich. Jedoch kann ich dir nicht zustimmen.' },
+    { prompt:'Das Auto ist schnell. ___ verbraucht es viel Benzin.', answer:'jedoch', full:'Das Auto ist schnell. Jedoch verbraucht es viel Benzin.' },
+    { prompt:'Wir wollten gehen. ___ hat es angefangen zu regnen.', answer:'jedoch', full:'Wir wollten gehen. Jedoch hat es angefangen zu regnen.' },
+    { prompt:'Die Prüfung war kurz. ___ war sie sehr kompliziert.', answer:'jedoch', full:'Die Prüfung war kurz. Jedoch war sie sehr kompliziert.' },
+    { prompt:'Ich habe angerufen. ___ hat niemand geantwortet.', answer:'jedoch', full:'Ich habe angerufen. Jedoch hat niemand geantwortet.' },
+    { prompt:'Das Hotel ist modern. ___ liegt es direkt an der Autobahn.', answer:'jedoch', full:'Das Hotel ist modern. Jedoch liegt es direkt an der Autobahn.' },
+    { prompt:'Er spricht fließend. ___ hat er einen starken Akzent.', answer:'jedoch', full:'Er spricht fließend. Jedoch hat er einen starken Akzent.' },
+    { prompt:'Die Musik ist toll. ___ ist sie viel zu laut.', answer:'jedoch', full:'Die Musik ist toll. Jedoch ist sie viel zu laut.' },
+    { prompt:'Ich habe Hunger. ___ möchte ich jetzt nichts essen.', answer:'jedoch', full:'Ich habe Hunger. Jedoch möchte ich jetzt nichts essen.' },
+    { prompt:'Der Plan ist fertig. ___ müssen wir ihn noch prüfen.', answer:'jedoch', full:'Der Plan ist fertig. Jedoch müssen wir ihn noch prüfen.' },
+    { prompt:'Sie ist glücklich. ___ vermisst sie ihre Familie.', answer:'jedoch', full:'Sie ist glücklich. Jedoch vermisst sie ihre Familie.' }
+  ]},
+
+  // --- GÖRSELDEKİ LİSTEDEN EKLENEN YENİ BAĞLAÇLAR ---
+
+
+
+
+
+
+
+
+ { key:'bis', text:'bis', tr:'-e kadar', category:'sub', examples:[
+    { prompt:'Ich warte hier, ___ du fertig bist.', answer:'bis', full:'Ich warte hier, bis du fertig bist.' },
+    { prompt:'Wir bleiben im Haus, ___ es aufhört zu regnen.', answer:'bis', full:'Wir bleiben im Haus, bis es aufhört zu regnen.' },
+    { prompt:'Du musst lernen, ___ du alles verstehst.', answer:'bis', full:'Du musst lernen, bis du alles verstehst.' },
+    { prompt:'Ich spare Geld, ___ ich mir ein Auto kaufen kann.', answer:'bis', full:'Ich spare Geld, bis ich mir ein Auto kaufen kann.' },
+    { prompt:'Rühr den Teig, ___ er glatt ist.', answer:'bis', full:'Rühr den Teig, bis er glatt ist.' },
+    { prompt:'Wir fahren geradeaus, ___ wir die Ampel sehen.', answer:'bis', full:'Wir fahren geradeaus, bis wir die Ampel sehen.' },
+    { prompt:'Ich bleibe wach, ___ mein Mitbewohner nach Hause kommt.', answer:'bis', full:'Ich bleibe wach, bis mein Mitbewohner nach Hause kommt.' },
+    { prompt:'Lass die Suppe kochen, ___ das Gemüse weich ist.', answer:'bis', full:'Lass die Suppe kochen, bis das Gemüse weich ist.' },
+    { prompt:'Er hat gearbeitet, ___ es dunkel wurde.', answer:'bis', full:'Er hat gearbeitet, bis es dunkel wurde.' },
+    { prompt:'Ich trinke keinen Alkohol, ___ die Party zu Ende ist.', answer:'bis', full:'Ich trinke keinen Alkohol, bis die Party zu Ende ist.' },
+    { prompt:'Putz dir die Zähne, ___ sie richtig sauber sind.', answer:'bis', full:'Putz dir die Zähne, bis sie richtig sauber sind.' },
+    { prompt:'Wir müssen warten, ___ der Arzt Zeit hat.', answer:'bis', full:'Wir müssen warten, bis der Arzt Zeit hat.' },
+    { prompt:'Ich lese dieses Buch, ___ ich müde werde.', answer:'bis', full:'Ich lese dieses Buch, bis ich müde werde.' },
+    { prompt:'Behalte das Geheimnis, ___ ich es allen erzähle.', answer:'bis', full:'Behalte das Geheimnis, bis ich es allen erzähle.' },
+    { prompt:'Du darfst nicht spielen, ___ du deine Hausaufgaben gemacht hast.', answer:'bis', full:'Du darfst nicht spielen, bis du deine Hausaufgaben gemacht hast.' },
+    { prompt:'Wir spazieren am Fluss entlang, ___ die Sonne untergeht.', answer:'bis', full:'Wir spazieren am Fluss entlang, bis die Sonne untergeht.' },
+    { prompt:'Halt bitte die Tür fest, ___ ich die Taschen abgestellt habe.', answer:'bis', full:'Halt bitte die Tür fest, bis ich die Taschen abgestellt habe.' },
+    { prompt:'Ich trainiere jeden Tag, ___ ich fit bin.', answer:'bis', full:'Ich trainiere jeden Tag, bis ich fit bin.' },
+    { prompt:'Warte an der Haltestelle, ___ der Bus kommt.', answer:'bis', full:'Warte an der Haltestelle, bis der Bus kommt.' },
+    { prompt:'Ich bleibe bei dir, ___ es dir besser geht.', answer:'bis', full:'Ich bleibe bei dir, bis es dir besser geht.' }
+  ]},
+
+
+{ key:'indem', text:'indem', tr:'-erek / -arak', category:'sub', examples:[
+    { prompt:'Man lernt Deutsch, ___ man viel spricht.', answer:'indem', full:'Man lernt Deutsch, indem man viel spricht.' },
+    { prompt:'Er spart Geld, ___ er zu Hause kocht.', answer:'indem', full:'Er spart Geld, indem er zu Hause kocht.' },
+    { prompt:'Du bleibst fit, ___ du täglich Sport machst.', answer:'indem', full:'Du bleibst fit, indem du täglich Sport machst.' },
+    { prompt:'Ich entspanne mich, ___ ich Musik höre.', answer:'indem', full:'Ich entspanne mich, indem ich Musik höre.' },
+    { prompt:'Sie hilft der Umwelt, ___ sie Plastik vermeidet.', answer:'indem', full:'Sie hilft der Umwelt, indem sie Plastik vermeidet.' },
+    { prompt:'Man öffnet die Tür, ___ man den Knopf drückt.', answer:'indem', full:'Man öffnet die Tür, indem man den Knopf drückt.' },
+    { prompt:'Er verbessert sein Schreiben, ___ er jeden Tag übt.', answer:'indem', full:'Er verbessert sein Schreiben, indem er jeden Tag übt.' },
+    { prompt:'Ich finde den Weg, ___ ich Google Maps nutze.', answer:'indem', full:'Ich finde den Weg, indem ich Google Maps nutze.' },
+    { prompt:'Man kann Energie sparen, ___ man das Licht ausschaltet.', answer:'indem', full:'Man kann Energie sparen, indem man das Licht ausschaltet.' },
+    { prompt:'Sie verdient Geld, ___ sie Nachhilfe gibt.', answer:'indem', full:'Sie verdient Geld, indem sie Nachhilfe gibt.' },
+    { prompt:'Ich informiere mich, ___ ich Nachrichten lese.', answer:'indem', full:'Ich informiere mich, indem ich Nachrichten lese.' },
+    { prompt:'Wir schützen das Klima, ___ wir weniger Auto fahren.', answer:'indem', full:'Wir schützen das Klima, indem wir weniger Auto fahren.' },
+    { prompt:'Du kannst mich erreichen, ___ du mir eine E-Mail schreibst.', answer:'indem', full:'Du kannst mich erreichen, indem du mir eine E-Mail schreibst.' },
+    { prompt:'Er hat das Problem gelöst, ___ er seinen Chef fragte.', answer:'indem', full:'Er hat das Problem gelöst, indem er seinen Chef fragte.' },
+    { prompt:'Man macht Kaffee, ___ man Wasser kocht.', answer:'indem', full:'Man macht Kaffee, indem man Wasser kocht.' },
+    { prompt:'Sie lernt neue Leute kennen, ___ sie in einen Club geht.', answer:'indem', full:'Sie lernt neue Leute kennen, indem sie in einen Club geht.' },
+    { prompt:'Ich beruhige mich, ___ ich tief einatme.', answer:'indem', full:'Ich beruhige mich, indem ich tief einatme.' },
+    { prompt:'Man schützt das Handy, ___ man eine Hülle kauft.', answer:'indem', full:'Man schützt das Handy, indem man eine Hülle kauft.' },
+    { prompt:'Er hat die Prüfung bestanden, ___ er Tag und Nacht lernte.', answer:'indem', full:'Er hat die Prüfung bestanden, indem er Tag und Nacht lernte.' },
+    { prompt:'Wir sparen Zeit, ___ wir den Zug nehmen.', answer:'indem', full:'Wir sparen Zeit, indem wir den Zug nehmen.' }
+  ]},
+
+
+{ key:'sodass', text:'sodass', tr:'-acak şekilde / sonuç olarak', category:'sub', examples:[
+    { prompt:'Er spricht laut, ___ ihn jeder verstehen kann.', answer:'sodass', full:'Er spricht laut, sodass ihn jeder verstehen kann.' },
+    { prompt:'Ich spare viel Geld, ___ ich mir ein Auto kaufen kann.', answer:'sodass', full:'Ich spare viel Geld, sodass ich mir ein Auto kaufen kann.' },
+    { prompt:'Es regnete stark, ___ die Straßen überflutet waren.', answer:'sodass', full:'Es regnete stark, sodass die Straßen überflutet waren.' },
+    { prompt:'Sie lernt fleißig, ___ sie die Prüfung sicher besteht.', answer:'sodass', full:'Sie lernt fleißig, sodass sie die Prüfung sicher besteht.' },
+    { prompt:'Der Bus hatte Verspätung, ___ ich zu spät kam.', answer:'sodass', full:'Der Bus hatte Verspätung, sodass ich zu spät kam.' },
+    { prompt:'Ich habe den Wecker gestellt, ___ ich nicht verschlafe.', answer:'sodass', full:'Ich habe den Wecker gestellt, sodass ich nicht verschlafe.' },
+    { prompt:'Er arbeitet viel, ___ er wenig Freizeit hat.', answer:'sodass', full:'Er arbeitet viel, sodass er wenig Freizeit hat.' },
+    { prompt:'Wir haben das Fenster zugemacht, ___ es warm bleibt.', answer:'sodass', full:'Wir haben das Fenster zugemacht, sodass es warm bleibt.' },
+    { prompt:'Die Sonne scheint, ___ wir draußen sitzen können.', answer:'sodass', full:'Die Sonne scheint, sodass wir draußen sitzen können.' },
+    { prompt:'Ich trinke viel Wasser, ___ ich keinen Durst mehr habe.', answer:'sodass', full:'Ich trinke viel Wasser, sodass ich keinen Durst mehr habe.' },
+    { prompt:'Sie schreibt alles auf, ___ sie nichts vergisst.', answer:'sodass', full:'Sie schreibt alles auf, sodass sie nichts vergisst.' },
+    { prompt:'Der Koffer ist zu schwer, ___ ich ihn nicht tragen kann.', answer:'sodass', full:'Der Koffer ist zu schwer, sodass ich ihn nicht tragen kann.' },
+    { prompt:'Er hat die Tür abgeschlossen, ___ niemand reinkommt.', answer:'sodass', full:'Er hat die Tür abgeschlossen, sodass niemand reinkommt.' },
+    { prompt:'Wir beeilen uns, ___ wir pünktlich ankommen.', answer:'sodass', full:'Wir beeilen uns, sodass wir pünktlich ankommen.' },
+    { prompt:'Ich habe die Lampe repariert, ___ es wieder hell ist.', answer:'sodass', full:'Ich habe die Lampe repariert, sodass es wieder hell ist.' },
+    { prompt:'Sie isst gesund, ___ sie fit bleibt.', answer:'sodass', full:'Sie isst gesund, sodass sie fit bleibt.' },
+    { prompt:'Er spricht langsam, ___ ich alles verstehe.', answer:'sodass', full:'Er spricht langsam, sodass ich alles verstehe.' },
+    { prompt:'Das Hotel war voll, ___ wir ein anderes suchen mussten.', answer:'sodass', full:'Das Hotel war voll, sodass wir ein anderes suchen mussten.' },
+    { prompt:'Ich habe den Termin verschoben, ___ ich Zeit für dich habe.', answer:'sodass', full:'Ich habe den Termin verschoben, sodass ich Zeit für dich habe.' },
+    { prompt:'Die Musik war leise, ___ wir uns unterhalten konnten.', answer:'sodass', full:'Die Musik war leise, sodass wir uns unterhalten konnten.' }
+  ]},
+
+
+{ key:'solange', text:'solange', tr:'-dığı sürece', category:'sub', examples:[
+    { prompt:'Ich bleibe hier, ___ es regnet.', answer:'solange', full:'Ich bleibe hier, solange es regnet.' },
+    { prompt:'Du darfst fernsehen, ___ du deine Hausaufgaben machst.', answer:'solange', full:'Du darfst fernsehen, solange du deine Hausaufgaben machst.' },
+    { prompt:'___ ich lebe, werde ich dich lieben.', answer:'solange', full:'Solange ich lebe, werde ich dich lieben.' },
+    { prompt:'Wir warten hier, ___ der Bus nicht kommt.', answer:'solange', full:'Wir warten hier, solange der Bus nicht kommt.' },
+    { prompt:'Du kannst mein Auto leihen, ___ du vorsichtig fährst.', answer:'solange', full:'Du kannst mein Auto leihen, solange du vorsichtig fährst.' },
+    { prompt:'___ es warm ist, gehen wir jeden Tag schwimmen.', answer:'solange', full:'Solange es warm ist, gehen wir jeden Tag schwimmen.' },
+    { prompt:'Ich helfe dir, ___ du mich brauchst.', answer:'solange', full:'Ich helfe dir, solange du mich brauchst.' },
+    { prompt:'Er schläft, ___ es im Zimmer leise ist.', answer:'solange', full:'Er schläft, solange es im Zimmer leise ist.' },
+    { prompt:'Du kannst bei mir wohnen, ___ du einen Job suchst.', answer:'solange', full:'Du kannst bei mir wohnen, solange du einen Job suchst.' },
+    { prompt:'Wir bleiben draußen, ___ die Sonne scheint.', answer:'solange', full:'Wir bleiben draußen, solange die Sonne scheint.' },
+    { prompt:'___ du krank bist, musst du im Bett bleiben.', answer:'solange', full:'Solange du krank bist, musst du im Bett bleiben.' },
+    { prompt:'Ich sage nichts, ___ du mich nicht fragst.', answer:'solange', full:'Ich sage nichts, solange du mich nicht fragst.' },
+    { prompt:'Er arbeitet hart, ___ er jung ist.', answer:'solange', full:'Er arbeitet hart, solange er jung ist.' },
+    { prompt:'Wir sparen Geld, ___ die Preise so hoch sind.', answer:'solange', full:'Wir sparen Geld, solange die Preise so hoch sind.' },
+    { prompt:'___ man lernt, bleibt man geistig fit.', answer:'solange', full:'Solange man lernt, bleibt man geistig fit.' },
+    { prompt:'Ich trage diese Jacke, ___ sie mir gefällt.', answer:'solange', full:'Ich trage diese Jacke, solange sie mir gefällt.' },
+    { prompt:'Du bekommst kein Geld, ___ du nicht arbeitest.', answer:'solange', full:'Du bekommst kein Geld, solange du nicht arbeitest.' },
+    { prompt:'___ der Vorrat reicht, verkaufen wir das Produkt.', answer:'solange', full:'Solange der Vorrat reicht, verkaufen wir das Produkt.' },
+    { prompt:'Ich höre dir zu, ___ du ruhig sprichst.', answer:'solange', full:'Ich höre dir zu, solange du ruhig sprichst.' },
+    { prompt:'___ die Musik spielt, tanzen die Leute.', answer:'solange', full:'Solange die Musik spielt, tanzen die Leute.' }
+  ]},
+
+
+{ key:'sooft', text:'sooft', tr:'her ne zaman ... -sa', category:'sub', examples:[
+    { prompt:'Ich trinke Wasser, ___ ich Durst habe.', answer:'sooft', full:'Ich trinke Wasser, sooft ich Durst habe.' },
+    { prompt:'Er ruft mich an, ___ er Hilfe braucht.', answer:'sooft', full:'Er ruft mich an, sooft er Hilfe braucht.' },
+    { prompt:'___ ich Zeit habe, lese ich ein Buch.', answer:'sooft', full:'Sooft ich Zeit habe, lese ich ein Buch.' },
+    { prompt:'Wir besuchen das Restaurant, ___ wir in Berlin sind.', answer:'sooft', full:'Wir besuchen das Restaurant, sooft wir in Berlin sind.' },
+    { prompt:'Sie lächelt, ___ sie ein Baby sieht.', answer:'sooft', full:'Sie lächelt, sooft sie ein Baby sieht.' },
+    { prompt:'___ er krank ist, bleibt er zu Hause.', answer:'sooft', full:'Sooft er krank ist, bleibt er zu Hause.' },
+    { prompt:'Ich höre Musik, ___ ich im Auto sitze.', answer:'sooft', full:'Ich höre Musik, sooft ich im Auto sitze.' },
+    { prompt:'___ die Sonne scheint, gehe ich spazieren.', answer:'sooft', full:'Sooft die Sonne scheint, gehe ich spazieren.' },
+    { prompt:'Er isst Schokolade, ___ er traurig ist.', answer:'sooft', full:'Er isst Schokolade, sooft er traurig ist.' },
+    { prompt:'___ ich diesen Film sehe, muss ich lachen.', answer:'sooft', full:'Sooft ich diesen Film sehe, muss ich lachen.' },
+    { prompt:'Sie schreibt eine Nachricht, ___ sie im Urlaub ist.', answer:'sooft', full:'Sie schreibt eine Nachricht, sooft sie im Urlaub ist.' },
+    { prompt:'___ wir uns treffen, reden wir über alte Zeiten.', answer:'sooft', full:'Sooft wir uns treffen, reden wir über alte Zeiten.' },
+    { prompt:'Ich lerne neue Vokabeln, ___ ich Zeit finde.', answer:'sooft', full:'Ich lerne neue Vokabeln, sooft ich Zeit finde.' },
+    { prompt:'___ es regnet, nehme ich einen Regenschirm.', answer:'sooft', full:'Sooft es regnet, nehme ich einen Regenschirm.' },
+    { prompt:'Er macht Sport, ___ er Energie hat.', answer:'sooft', full:'Er macht Sport, sooft er Energie hat.' },
+    { prompt:'___ ich meine Mutter besuche, kocht sie für mich.', answer:'sooft', full:'Sooft ich meine Mutter besuche, kocht sie für mich.' },
+    { prompt:'Wir machen Fotos, ___ wir auf Reisen sind.', answer:'sooft', full:'Wir machen Fotos, sooft wir auf Reisen sind.' },
+    { prompt:'___ ich Kaffee trinke, fühle ich mich wach.', answer:'sooft', full:'Sooft ich Kaffee trinke, fühle ich mich wach.' },
+    { prompt:'Sie kauft Kleidung, ___ es Angebote gibt.', answer:'sooft', full:'Sie kauft Kleidung, sooft es Angebote gibt.' },
+    { prompt:'___ das Telefon klingelt, geht er sofort ran.', answer:'sooft', full:'Sooft das Telefon klingelt, geht er sofort ran.' }
+  ]},
+
+{ key:'da', text:'da', tr:'-dığı için / çünkü', category:'sub', examples:[
+    { prompt:'___ es regnet, bleiben wir zu Hause.', answer:'da', full:'Da es regnet, bleiben wir zu Hause.' },
+    { prompt:'Ich kann nicht kommen, ___ ich arbeiten muss.', answer:'da', full:'Ich kann nicht kommen, da ich arbeiten muss.' },
+    { prompt:'___ er krank ist, geht er zum Arzt.', answer:'da', full:'Da er krank ist, geht er zum Arzt.' },
+    { prompt:'Wir beeilen uns, ___ wir spät dran sind.', answer:'da', full:'Wir beeilen uns, da wir spät dran sind.' },
+    { prompt:'___ ich keinen Hunger habe, esse ich nichts.', answer:'da', full:'Da ich keinen Hunger habe, esse ich nichts.' },
+    { prompt:'Er kauft das Auto nicht, ___ es zu teuer ist.', answer:'da', full:'Er kauft das Auto nicht, da es zu teuer ist.' },
+    { prompt:'___ die Sonne scheint, gehen wir in den Park.', answer:'da', full:'Da die Sonne scheint, gehen wir in den Park.' },
+    { prompt:'Ich frage dich, ___ du dich gut auskennst.', answer:'da', full:'Ich frage dich, da du dich gut auskennst.' },
+    { prompt:'___ das Restaurant voll war, suchten wir ein anderes.', answer:'da', full:'Da das Restaurant voll war, suchten wir ein anderes.' },
+    { prompt:'Sie freut sich, ___ sie die Prüfung bestanden hat.', answer:'da', full:'Sie freut sich, da sie die Prüfung bestanden hat.' },
+    { prompt:'___ wir Zeit haben, können wir einen Kaffee trinken.', answer:'da', full:'Da wir Zeit haben, können wir einen Kaffee trinken.' },
+    { prompt:'Ich helfe dir, ___ du mein Freund bist.', answer:'da', full:'Ich helfe dir, da du mein Freund bist.' },
+    { prompt:'___ das Fenster offen war, war es im Zimmer kalt.', answer:'da', full:'Da das Fenster offen war, war es im Zimmer kalt.' },
+    { prompt:'Er schläft noch, ___ es erst sechs Uhr ist.', answer:'da', full:'Er schläft noch, da es erst sechs Uhr ist.' },
+    { prompt:'___ ich müde bin, gehe ich jetzt ins Bett.', answer:'da', full:'Da ich müde bin, gehe ich jetzt ins Bett.' },
+    { prompt:'Wir nehmen den Bus, ___ das Auto kaputt ist.', answer:'da', full:'Wir nehmen den Bus, da das Auto kaputt ist.' },
+    { prompt:'___ du alles weißt, brauche ich nichts zu sagen.', answer:'da', full:'Da du alles weißt, brauche ich nichts zu sagen.' },
+    { prompt:'Sie trägt eine Brille, ___ sie nicht gut sieht.', answer:'da', full:'Sie trägt eine Brille, da sie nicht gut sieht.' },
+    { prompt:'___ es dunkel wird, machen wir das Licht an.', answer:'da', full:'Da es dunkel wird, machen wir das Licht an.' },
+    { prompt:'Ich schreibe dir, ___ ich deine Hilfe brauche.', answer:'da', full:'Ich schreibe dir, da ich deine Hilfe brauche.' }
+  ]},
+
+
+  { key: 'doch', text: 'doch', tr: 'fakat / ama', category: 'pos2', examples: [
+    { prompt: 'Ich bin müde, ___ ich arbeite weiter.', full: 'Ich bin müde, doch ich arbeite weiter.' },
+    { prompt: 'Es ist teuer, ___ ich kaufe es.', full: 'Es ist teuer, doch ich kaufe es.' },
+    { prompt: 'Er ist klein, ___ er ist sehr stark.', full: 'Er ist klein, doch er ist sehr stark.' },
+    { prompt: 'Ich habe kein Geld, ___ ich bin glücklich.', full: 'Ich habe kein Geld, doch ich bin glücklich.' },
+    { prompt: 'Sie hat angerufen, ___ kimand hat geantwortet.', full: 'Sie hat angerufen, doch niemand hat geantwortet.' },
+    { prompt: 'Wir wollten gehen, ___ es regnete.', full: 'Wir wollten gehen, doch es regnete.' },
+    { prompt: 'Er lerne viel, ___ er verstand nichts.', full: 'Er lernte viel, doch er verstand nichts.' },
+    { prompt: 'Ich mag Pizza, ___ Pasta ist besser.', full: 'Ich mag Pizza, doch Pasta ist besser.' },
+    { prompt: 'Das Wetter ist schlecht, ___ wir gehen raus.', full: 'Das Wetter ist schlecht, doch wir gehen raus.' },
+    { prompt: 'Ich kenne ihn, ___ ich kenne seinen Namen nicht.', full: 'Ich kenne ihn, doch ich kenne seinen Namen nicht.' },
+    { prompt: 'Es ist spät, ___ ich bin nicht müde.', full: 'Es ist spät, doch ich bin nicht müde.' },
+    { prompt: 'Der Test war schwer, ___ ich habe bestanden.', full: 'Der Test war schwer, doch ich habe bestanden.' },
+    { prompt: 'Er ist reich, ___ er lebt sehr einfach.', full: 'Er ist reich, doch er lebt sehr einfach.' },
+    { prompt: 'Ich habe gesucht, ___ ich habe nichts gefunden.', full: 'Ich habe gesucht, doch ich habe nichts gefunden.' },
+    { prompt: 'Die Sonne scheint, ___ es ist kalt.', full: 'Die Sonne scheint, doch es ist kalt.' },
+    { prompt: 'Ich wollte schlafen, ___ es war zu laut.', full: 'Ich wollte schlafen, doch es war zu laut.' },
+    { prompt: 'Sie ist schön, ___ sie ist unfreundlich.', full: 'Sie ist schön, doch sie ist unfreundlich.' },
+    { prompt: 'Das Auto ist alt, ___ es fährt gut.', full: 'Das Auto ist alt, doch es fährt gut.' },
+    { prompt: 'Ich bin krank, ___ ich gehe zur Schule.', full: 'Ich bin krank, doch ich gehe zur Schule.' },
+    { prompt: 'Er liebt sie, ___ sie liebt ihn nicht.', full: 'Er liebt sie, doch sie liebt ihn nicht.' }
+  ]},
+  
+];
+
+const categories = [
+  { id:'pos0', title:'Adverbial Konnektoren (Fiil Hemen Sonra)', desc:'Bağlaç cümlenin başındadır, çekimli fiil hemen ardından (2. sırada) gelir.' },
+  { id:'pos2', title:'ADUSO Bağlaçları (Normal Dizilim)', desc:'Bu bağlaçlar cümleyi etkilemez; Özne + Fiil şeklinde normal devam edilir.' },
+  { id:'sub', title:'Subjunktionen (Fiil En Sonda)', desc:'Bir yan cümle başlatırlar ve çekimli fiili cümlenin en sonuna atarlar.' },
+  { id:'doppel', title:'Doppelkonnektoren (Çiftli Yapılar)', desc:'İki farklı parçadan oluşan ve cümlede farklı yerlere yerleşen yapılardır.' }
+];
+
+const selectionCategories = document.getElementById('selectionCategories');
+const screens = {
+  home: document.getElementById('homeScreen'),
+  select: document.getElementById('selectScreen'),
+  game: document.getElementById('gameScreen')
+};
+const questionText = document.getElementById('questionText');
+const choiceGrid = document.getElementById('choiceGrid');
+const resultText = document.getElementById('resultText');
+const selectedCountText = document.getElementById('selectedCountText');
+const lifeText = document.getElementById('lifeText');
+const correctText = document.getElementById('correctText');
+const wrongText = document.getElementById('wrongText');
+const autoNextToggle = document.getElementById('autoNextToggle');
+const autoNextDelay = document.getElementById('autoNextDelay');
+
+let selectedKeys = [];
+let currentQuestion = null;
+let selectedOption = null;
+let lives = 5;
+let correctCount = 0;
+let wrongCount = 0;
+let autoCheckTimer = null;
+let autoNextTimer = null;
+
+function showScreen(name){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
+
+function saveSelection(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedKeys)); }
+function loadSelection(){
+  try{ selectedKeys = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch{ selectedKeys = []; }
+}
+
+function renderSelection(){
+  selectionCategories.innerHTML = '';
+  categories.forEach(cat => {
+    const wrap = document.createElement('div');
+    wrap.className = 'category';
+    wrap.innerHTML = `<h3>${cat.title}</h3><small>${cat.desc}</small>`;
+    const checks = document.createElement('div');
+    checks.className = 'checks';
+    conjunctionData.filter(x=>x.category===cat.id).forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'check-item';
+      const checked = selectedKeys.includes(item.key) ? 'checked' : '';
+      div.innerHTML = `
+        <input type="checkbox" id="chk_${item.key}" data-key="${item.key}" ${checked}>
+        <label for="chk_${item.key}">${item.text} <span style="opacity:.9">(${item.tr})</span></label>
+      `;
+      checks.appendChild(div);
+    });
+    wrap.appendChild(checks);
+    selectionCategories.appendChild(wrap);
+  });
+
+  selectionCategories.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const key = cb.dataset.key;
+      if (cb.checked) {
+        if (!selectedKeys.includes(key)) selectedKeys.push(key);
+      } else {
+        selectedKeys = selectedKeys.filter(x => x !== key);
+      }
+      updateSelectedCount();
+    });
+  });
+  updateSelectedCount();
+}
+
+
+function updateSelectedCount(){ selectedCountText.textContent = `Seçilen: ${selectedKeys.length}`; }
+
+function speak(text){
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'de-DE';
+  u.rate = 0.9;
+  window.speechSynthesis.speak(u);
+}
+
+function makeQuestion(){
+  const pool = conjunctionData.filter(x => selectedKeys.includes(x.key));
+  if (pool.length < 4) return null;
+  const item = pool[Math.floor(Math.random()*pool.length)];
+  const example = item.examples[Math.floor(Math.random()*item.examples.length)];
+  const distractors = shuffle(pool.filter(x => x.key !== item.key)).slice(0,3);
+  const options = shuffle([item, ...distractors]).map(x => ({ key:x.key, text:x.text }));
+  return { item, example, options };
+}
+
+function shuffle(arr){
+  const copy = [...arr];
+  for (let i = copy.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]] = [copy[j],copy[i]];
+  }
+  return copy;
+}
+
+function clearTimers(){ clearTimeout(autoNextTimer); }
+
+function renderPromptWithBlank(prompt){
+  return escapeHtml(prompt).replace(/___/g, '<span class="blank-slot">___</span>');
+}
+
+function renderPromptWithAnswer(prompt, answer){
+  const parts = answer.includes('...') ? answer.split('...').map(x => x.trim()) : [answer];
+  let i = 0;
+  return escapeHtml(prompt).replace(/___/g, () => {
+    const part = parts[Math.min(i, parts.length - 1)];
+    i += 1;
+    return `<span class="filled-answer">${escapeHtml(part)}</span>`;
+  });
+}
+
+function toPunktSpeech(prompt){
+  return prompt.replace(/___/g, 'punkt punkt punkt');
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;');
+}
+
+function loadQuestion(){
+  clearTimers();
+  selectedOption = null;
+  lives = 5;
+  lifeText.textContent = String(lives);
+  resultText.textContent = '';
+  currentQuestion = makeQuestion();
+  if (!currentQuestion) {
+    questionText.textContent = 'Oyuna başlamak için en az 4 bağlaç seçmelisin.';
+    choiceGrid.innerHTML = '';
+    return;
+  }
+  questionText.innerHTML = renderPromptWithBlank(currentQuestion.example.prompt);
+  choiceGrid.innerHTML = '';
+  currentQuestion.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = opt.text;
+    btn.dataset.key = opt.key;
+    btn.addEventListener('click', () => chooseOption(btn, opt));
+    choiceGrid.appendChild(btn);
+  });
+  speak(toPunktSpeech(currentQuestion.example.prompt));
+}
+
+function chooseOption(btn, opt){
+  if (!currentQuestion || btn.disabled) return;
+
+  const isCorrect = opt.key === currentQuestion.item.key;
+  if (isCorrect) {
+    btn.classList.add('correct');
+    correctCount++;
+    correctText.textContent = String(correctCount);
+    resultText.textContent = `Doğru: ${currentQuestion.item.text} (${currentQuestion.item.tr})`;
+    questionText.innerHTML = renderPromptWithAnswer(currentQuestion.example.prompt, currentQuestion.item.text);
+    choiceGrid.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+    speak(currentQuestion.example.full);
+
+    if (autoNextToggle.value === 'on') {
+      autoNextTimer = setTimeout(loadQuestion, Number(autoNextDelay.value)*1000);
+    }
+  } else {
+    btn.classList.add('wrong');
+    btn.disabled = true;
+    lives--;
+    wrongCount++;
+    lifeText.textContent = String(lives);
+    wrongText.textContent = String(wrongCount);
+
+    if (lives > 0) {
+      resultText.textContent = `Yanlış. Kalan hak: ${lives}`;
+    } else {
+      const correctBtn = [...choiceGrid.querySelectorAll('.choice-btn')].find(b => b.dataset.key === currentQuestion.item.key);
+      if (correctBtn) correctBtn.classList.add('correct');
+      choiceGrid.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+      questionText.innerHTML = renderPromptWithAnswer(currentQuestion.example.prompt, currentQuestion.item.text);
+      resultText.textContent = `Hak bitti. Doğru cevap: ${currentQuestion.item.text}`;
+      speak(currentQuestion.example.full);
+
+      if (autoNextToggle.value === 'on') {
+        autoNextTimer = setTimeout(loadQuestion, Number(autoNextDelay.value)*1000);
+      }
+    }
+  }
+}
+
+function openGame(){
+  if (selectedKeys.length < 4) {
+    alert('Oyuna başlamak için en az 4 bağlaç seç.');
+    showScreen('select');
+    return;
+  }
+  showScreen('game');
+  updateSelectedCount();
+  loadQuestion();
+}
+// events
+loadSelection();
+renderSelection();
+
+document.getElementById('openSelectBtn').addEventListener('click', ()=>showScreen('select'));
+document.getElementById('startGameBtn').addEventListener('click', openGame);
+document.getElementById('backToHomeBtn').addEventListener('click', ()=>showScreen('home'));
+document.getElementById('saveSelectionBtn').addEventListener('click', ()=>{ saveSelection(); openGame(); });
+document.getElementById('selectAllBtn').addEventListener('click', ()=>{
+  selectedKeys = conjunctionData.map(x=>x.key); renderSelection(); saveSelection();
+});
+document.getElementById('clearAllBtn').addEventListener('click', ()=>{
+  selectedKeys = []; renderSelection(); saveSelection();
+});
+document.getElementById('openSelectFromGameBtn').addEventListener('click', ()=>showScreen('select'));
+document.getElementById('backToGameHomeBtn').addEventListener('click', ()=>showScreen('home'));
+document.getElementById('nextBtn').addEventListener('click', loadQuestion);
+
+updateSelectedCount();
+if (selectedKeys.length < 4) {
+  selectedKeys = conjunctionData.slice(0, 8).map(x => x.key);
+  saveSelection();
+}
+openGame();
+</script>
+</body>
+</html>

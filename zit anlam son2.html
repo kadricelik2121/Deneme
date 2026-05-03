@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zıt Anlam Modu</title>
+  <style>
+    :root{
+      --orange1:#ffb100;
+      --orange2:#ff6200;
+      --green1:#8be23f;
+      --green2:#2eb248;
+      --blue1:#44c7ff;
+      --blue2:#1159ff;
+      --purple1:#c86dff;
+      --purple2:#6529ff;
+      --red1:#ff7d8c;
+      --red2:#d92b46;
+      --text:#eef5ff;
+      --shadow:0 14px 30px rgba(0,0,0,.18);
+      --shadow-soft:0 8px 18px rgba(0,0,0,.14);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.16), transparent 18%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,.14), transparent 20%),
+        radial-gradient(circle at 70% 80%, rgba(255,255,255,.10), transparent 15%),
+        linear-gradient(180deg, #0d43b9 0%, #1769dd 35%, #2cc6ee 100%);
+      color:var(--text);
+      overflow:hidden;
+    }
+
+    .app-shell{height:100vh; padding:8px 12px; position:relative; overflow:hidden}
+    .screen{display:none; max-width:1180px; margin:0 auto; min-height:calc(100vh - 16px)}
+    .screen.active{display:block}
+
+    .top-nav{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:4px;
+      flex-wrap:wrap;
+    }
+
+    .mode-title{
+      font-size:clamp(26px, 3vw, 44px);
+      font-weight:900;
+      text-align:center;
+      margin:0 0 2px;
+      color:#fff;
+      text-shadow:0 4px 16px rgba(0,0,0,.18);
+    }
+
+    .mode-subtitle{
+      text-align:center;
+      font-size:clamp(16px, 1.8vw, 24px);
+      font-weight:800;
+      color:#eef6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.2);
+      margin-bottom:16px;
+    }
+
+    .glass-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.08));
+      border:1px solid rgba(255,255,255,.22);
+      border-radius:24px;
+      box-shadow:var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .top-btn, .card-btn, .answer-btn, .word-item, .opposite-item{
+      border:none;
+      color:#fff;
+      cursor:pointer;
+      font-weight:900;
+      text-shadow:0 2px 8px rgba(0,0,0,.24);
+      box-shadow:
+        inset 0 3px 0 rgba(255,255,255,.35),
+        inset 0 -6px 0 rgba(0,0,0,.18),
+        0 12px 20px rgba(0,0,0,.12);
+      transition:.16s transform, .16s filter;
+    }
+    .top-btn:hover, .card-btn:hover, .answer-btn:hover, .word-item:hover, .opposite-item:hover{transform:translateY(-2px)}
+
+    .btn-orange{background:linear-gradient(180deg, var(--orange1), var(--orange2))}
+    .btn-blue{background:linear-gradient(180deg, var(--blue1), var(--blue2))}
+    .btn-green{background:linear-gradient(180deg, var(--green1), var(--green2))}
+    .btn-purple{background:linear-gradient(180deg, var(--purple1), var(--purple2))}
+    .btn-red{background:linear-gradient(180deg, var(--red1), var(--red2))}
+
+    .top-btn{
+      min-height:54px;
+      min-width:150px;
+      border-radius:999px;
+      padding:10px 18px;
+      font-size:22px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .menu-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .menu-card{
+      min-height:300px;
+      border-radius:28px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
+      text-align:center;
+      box-shadow:
+        inset 0 3px 0 rgba(255,255,255,.35),
+        inset 0 -8px 0 rgba(0,0,0,.18),
+        0 16px 24px rgba(0,0,0,.14);
+    }
+
+    .menu-card h3{margin:4px 0 0; font-size:clamp(24px, 2.3vw, 40px); font-weight:900; color:#fff}
+    .card-emoji{font-size:84px; filter:drop-shadow(0 8px 14px rgba(0,0,0,.2)); margin:8px 0 4px}
+
+    .card-btn{
+      width:100%;
+      min-height:68px;
+      border-radius:999px;
+      font-size:clamp(22px, 2vw, 32px);
+      padding:12px 20px;
+    }
+
+    .stat-bar{
+      width:fit-content;
+      margin:0 auto 4px;
+      padding:5px 10px;
+      border-radius:12px;
+      background:linear-gradient(180deg, #c58945, #8d5420);
+      box-shadow:inset 0 2px 0 rgba(255,255,255,.22), inset 0 -3px 0 rgba(0,0,0,.14), var(--shadow-soft);
+    }
+
+    .stat-inner{
+      background:linear-gradient(180deg, rgba(69,34,6,.45), rgba(45,22,4,.65));
+      border-radius:10px;
+      padding:5px 10px;
+      min-height:30px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      font-weight:900;
+      font-size:13px;
+      color:#fff;
+    }
+
+    .question-card{
+      padding:22px 18px;
+      text-align:center;
+      margin-bottom:18px;
+    }
+
+    .question-word{
+      font-size:clamp(36px, 4vw, 58px);
+      font-weight:900;
+      color:#fff;
+      text-shadow:0 4px 16px rgba(0,0,0,.2);
+      margin-bottom:6px;
+    }
+
+    .question-label{
+      font-size:clamp(16px, 1.8vw, 24px);
+      font-weight:800;
+      color:#eef6ff;
+      text-shadow:0 2px 8px rgba(0,0,0,.2);
+    }
+
+    .answers-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+
+    .answer-btn{
+      min-height:84px;
+      border-radius:22px;
+      font-size:clamp(24px, 2.4vw, 34px);
+      padding:14px;
+      background:linear-gradient(180deg, var(--orange1), var(--orange2));
+    }
+    .answer-btn.correct{background:linear-gradient(180deg, var(--green1), var(--green2)) !important}
+    .answer-btn.wrong{background:linear-gradient(180deg, var(--red1), var(--red2)) !important}
+    .answer-btn.disabled-wrong{opacity:.92}
+
+
+    .tr-line{
+      display:block;
+      margin-top:6px;
+      font-size:.72em;
+      font-weight:800;
+      opacity:.96;
+      line-height:1.15;
+      text-shadow:0 2px 6px rgba(0,0,0,.22);
+    }
+
+    .match-tr-line{
+      display:block;
+      margin-top:7px;
+      font-size:.72em;
+      font-weight:800;
+      opacity:.96;
+      line-height:1.12;
+    }
+
+    .matched-pair{
+      flex-direction:column;
+      gap:4px;
+      line-height:1.15;
+    }
+
+    .matched-pair-de, .matched-pair-tr{
+      display:block;
+      width:100%;
+    }
+
+    .match-layout{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:-6px}
+    .panel{padding:12px; min-height:320px}
+    .panel-title{text-align:center; font-size:24px; font-weight:900; margin:0 0 8px; color:#fff}
+
+    .word-item, .opposite-item{
+      width:100%;
+      min-height:68px;
+      border-radius:18px;
+      margin-bottom:8px;
+      font-size:25px;
+      padding:8px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      user-select:none;
+    }
+    .word-item{background:linear-gradient(180deg, var(--orange1), var(--orange2))}
+    .opposite-item{background:linear-gradient(180deg, var(--blue1), var(--blue2))}
+    .word-item.selected{outline:4px solid rgba(255,255,255,.7); filter:brightness(1.06)}
+    .opposite-item.correct{background:linear-gradient(180deg, var(--green1), var(--green2))}
+
+    .result-box{
+      margin-top:6px;
+      text-align:center;
+      font-size:20px;
+      font-weight:900;
+      min-height:26px;
+      color:#fff7b0;
+      text-shadow:0 2px 8px rgba(0,0,0,.2);
+    }
+
+
+
+    #matchScreen{
+      transform:translateY(-10px);
+    }
+
+    @media (max-width: 980px){
+      .menu-grid, .match-layout, .answers-grid{grid-template-columns:1fr}
+      .top-nav{justify-content:center}
+      .menu-card{min-height:250px}
+    }
+
+    @media (max-width: 640px){
+      .app-shell{padding:10px}
+      .top-btn{min-width:126px; font-size:19px; min-height:48px}
+      .card-emoji{font-size:72px}
+      .answer-btn{min-height:74px; font-size:22px}
+      .word-item,.opposite-item{font-size:19px; min-height:50px}
+      .panel-title{font-size:24px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <section id="menuScreen" class="screen active">
+      <div class="top-nav">
+        <a class="top-btn btn-blue" id="homeBtnTop" href="#">🏠 Ana Sayfa</a>
+        <button class="top-btn btn-blue" id="nextBtnTop">Next</button>
+      </div>
+
+      <div class="mode-title">Zıt Anlam Modu</div>
+      <div class="mode-subtitle">Hangisini oynamak istersin?</div>
+
+      <div class="menu-grid">
+        <div class="menu-card btn-orange">
+          <h3>Seçenekli Mod</h3>
+          <div class="card-emoji">🅰️</div>
+          <button class="card-btn btn-orange" id="choiceModeBtn">Seçenekli Mod</button>
+        </div>
+
+        <div class="menu-card btn-green">
+          <h3>Eşleştirme Modu</h3>
+          <div class="card-emoji">🔀</div>
+          <button class="card-btn btn-green" id="matchModeBtn">Eşleştirme Modu</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="choiceScreen" class="screen">
+      <div class="top-nav">
+        <button class="top-btn btn-blue" id="choiceBackBtn">← Geri</button>
+        <button class="top-btn btn-blue" id="choiceNextBtn">Next</button>
+      </div>
+
+      <div class="stat-bar">
+        <div class="stat-inner">
+          <span id="choiceRoundText">1 / 10</span>
+          <span>✅ <span id="choiceCorrectCount">0</span></span>
+          <span>❌ <span id="choiceWrongCount">0</span></span>
+        </div>
+      </div>
+
+      <div class="mode-title">Seçenekli Zıt Anlam Modu</div>
+
+      <div class="glass-card question-card">
+        <div class="question-word" id="choiceQuestionWord">groß</div>
+        <div class="question-label">Zıt anlamını seç</div>
+      </div>
+
+      <div class="answers-grid" id="choiceAnswers"></div>
+      <div class="result-box" id="choiceResult"></div>
+    </section>
+
+    <section id="matchScreen" class="screen">
+      <div class="top-nav">
+        <button class="top-btn btn-blue" id="matchBackBtn">← Geri</button>
+        <button class="top-btn btn-blue" id="matchNextBtn">Next</button>
+      </div>
+
+      <div class="stat-bar">
+        <div class="stat-inner">
+          <span id="matchRoundText">1 / 5</span>
+          <span>✅ <span id="matchCorrectCount">0</span></span>
+          <span>❌ <span id="matchWrongCount">0</span></span>
+        </div>
+      </div>
+
+      <div class="mode-title">Zıt Anlam Eşleştirme Modu</div>
+
+      <div class="match-layout">
+        <div class="glass-card panel">
+          <div class="panel-title">Kelimeler</div>
+          <div id="leftWords"></div>
+        </div>
+
+        <div class="glass-card panel">
+          <div class="panel-title">Zıt Anlamlar</div>
+          <div id="rightWords"></div>
+        </div>
+      </div>
+
+      <div class="result-box" id="matchResult"></div>
+    </section>
+  </div>
+
+  <script>
+    const CHOICE_AUTO_NEXT_DELAY = 1000;
+    const MATCH_AUTO_NEXT_DELAY = 2000;
+
+    const oppositeData = [
+      { word: "groß", opposite: "klein", trWord: "büyük", trOpposite: "küçük" },
+      { word: "alt", opposite: "jung", trWord: "yaşlı/eski", trOpposite: "genç/yeni" },
+      { word: "teuer", opposite: "billig", trWord: "pahalı", trOpposite: "ucuz" },
+      { word: "schnell", opposite: "langsam", trWord: "hızlı", trOpposite: "yavaş" },
+      { word: "früh", opposite: "spät", trWord: "erken", trOpposite: "geç" },
+      { word: "heiß", opposite: "kalt", trWord: "sıcak", trOpposite: "soğuk" },
+      { word: "warm", opposite: "kühl", trWord: "ılık/sıcak", trOpposite: "serin" },
+      { word: "hell", opposite: "dunkel", trWord: "aydınlık", trOpposite: "karanlık" },
+      { word: "stark", opposite: "schwach", trWord: "güçlü", trOpposite: "zayıf" },
+      { word: "leicht", opposite: "schwer", trWord: "hafif/kolay", trOpposite: "ağır/zor" },
+      { word: "offen", opposite: "geschlossen", trWord: "açık", trOpposite: "kapalı" },
+      { word: "laut", opposite: "leise", trWord: "sesli/gürültülü", trOpposite: "sessiz" },
+      { word: "hoch", opposite: "niedrig", trWord: "yüksek", trOpposite: "alçak" },
+      { word: "richtig", opposite: "falsch", trWord: "doğru", trOpposite: "yanlış" },
+      { word: "krank", opposite: "gesund", trWord: "hasta", trOpposite: "sağlıklı" },
+      { word: "voll", opposite: "leer", trWord: "dolu", trOpposite: "boş" },
+      { word: "sauber", opposite: "schmutzig", trWord: "temiz", trOpposite: "kirli" },
+      { word: "neu", opposite: "alt", trWord: "yeni", trOpposite: "eski" },
+      { word: "freundlich", opposite: "unfreundlich", trWord: "dostça/kibar", trOpposite: "kaba/soğuk" },
+      { word: "einfach", opposite: "schwierig", trWord: "kolay/basit", trOpposite: "zor" },
+      { word: "arm", opposite: "reich", trWord: "fakir", trOpposite: "zengin" },
+      { word: "nah", opposite: "fern", trWord: "yakın", trOpposite: "uzak" },
+      { word: "oben", opposite: "unten", trWord: "yukarıda", trOpposite: "aşağıda" },
+      { word: "links", opposite: "rechts", trWord: "solda", trOpposite: "sağda" },
+      { word: "innen", opposite: "außen", trWord: "içeride/iç", trOpposite: "dışarıda/dış" },
+      { word: "vorne", opposite: "hinten", trWord: "önde", trOpposite: "arkada" },
+      { word: "hart", opposite: "weich", trWord: "sert", trOpposite: "yumuşak" },
+      { word: "trocken", opposite: "nass", trWord: "kuru", trOpposite: "ıslak" },
+      { word: "glücklich", opposite: "traurig", trWord: "mutlu", trOpposite: "üzgün" },
+      { word: "ruhig", opposite: "laut", trWord: "sakin/sessiz", trOpposite: "gürültülü" },
+      { word: "aktiv", opposite: "passiv", trWord: "aktif", trOpposite: "pasif" },
+      { word: "positiv", opposite: "negativ", trWord: "olumlu", trOpposite: "olumsuz" },
+      { word: "modern", opposite: "altmodisch", trWord: "modern", trOpposite: "eski moda" },
+      { word: "dick", opposite: "dünn", trWord: "kalın/şişman", trOpposite: "ince/zayıf" },
+      { word: "lang", opposite: "kurz", trWord: "uzun", trOpposite: "kısa" },
+      { word: "breit", opposite: "schmal", trWord: "geniş", trOpposite: "dar" },
+      { word: "tief", opposite: "hoch", trWord: "derin/alçak", trOpposite: "yüksek" },
+      { word: "mutig", opposite: "feige", trWord: "cesur", trOpposite: "korkak" },
+      { word: "faul", opposite: "fleißig", trWord: "tembel", trOpposite: "çalışkan" },
+      { word: "klug", opposite: "dumm", trWord: "akıllı", trOpposite: "aptal" },
+      { word: "interessant", opposite: "langweilig", trWord: "ilginç", trOpposite: "sıkıcı" },
+      { word: "gefährlich", opposite: "harmlos", trWord: "tehlikeli", trOpposite: "zararsız" },
+      { word: "wichtig", opposite: "unwichtig", trWord: "önemli", trOpposite: "önemsiz" },
+      { word: "beliebt", opposite: "unbeliebt", trWord: "sevilen/popüler", trOpposite: "sevilmeyen" },
+      { word: "bekannt", opposite: "unbekannt", trWord: "bilinen/tanınmış", trOpposite: "bilinmeyen" },
+      { word: "sicher", opposite: "unsicher", trWord: "güvenli/emin", trOpposite: "güvensiz/emin olmayan" },
+      { word: "ehrlich", opposite: "unehrlich", trWord: "dürüst", trOpposite: "dürüst olmayan" },
+      { word: "geduldig", opposite: "ungeduldig", trWord: "sabırlı", trOpposite: "sabırsız" },
+      { word: "optimistisch", opposite: "pessimistisch", trWord: "iyimser", trOpposite: "kötümser" },
+      { word: "stabil", opposite: "instabil", trWord: "istikrarlı/sağlam", trOpposite: "istikrarsız" },
+      { word: "frei", opposite: "besetzt", trWord: "boş/serbest", trOpposite: "dolu/meşgul" },
+      { word: "ledig", opposite: "verheiratet", trWord: "bekâr", trOpposite: "evli" },
+      { word: "lebendig", opposite: "tot", trWord: "canlı", trOpposite: "ölü" },
+      { word: "dicht", opposite: "locker", trWord: "sık/yoğun", trOpposite: "gevşek/seyrek" },
+      { word: "spitz", opposite: "stumpf", trWord: "sivri/keskin", trOpposite: "küt" },
+      { word: "drinnen", opposite: "draußen", trWord: "içeride", trOpposite: "dışarıda" },
+      { word: "immer", opposite: "nie", trWord: "her zaman", trOpposite: "asla" },
+      { word: "oft", opposite: "selten", trWord: "sık sık", trOpposite: "nadiren" },
+      { word: "sofort", opposite: "später", trWord: "hemen", trOpposite: "daha sonra" },
+      { word: "bereits", opposite: "noch nicht", trWord: "çoktan/zaten", trOpposite: "henüz değil" },
+      { word: "gestern", opposite: "morgen", trWord: "dün", trOpposite: "yarın" },
+      { word: "tagsüber", opposite: "nachts", trWord: "gündüzleri", trOpposite: "geceleri" },
+      { word: "früher", opposite: "später", trWord: "önceden/eskiden", trOpposite: "sonra/daha geç" },
+      { word: "vorher", opposite: "nachher", trWord: "önce", trOpposite: "sonra" },
+      { word: "ständig", opposite: "gelegentlich", trWord: "sürekli", trOpposite: "ara sıra" },
+      { word: "gleich", opposite: "anders", trWord: "aynı", trOpposite: "farklı" },
+      { word: "zusammen", opposite: "allein", trWord: "birlikte", trOpposite: "yalnız" },
+      { word: "hinauf", opposite: "hinunter", trWord: "yukarı doğru", trOpposite: "aşağı doğru" },
+      { word: "hinein", opposite: "hinaus", trWord: "içeriye", trOpposite: "dışarıya" },
+      { word: "vorwärts", opposite: "rückwärts", trWord: "ileri", trOpposite: "geri" },
+      { word: "hier", opposite: "dort", trWord: "burada", trOpposite: "orada" },
+      { word: "nirgendwo", opposite: "überall", trWord: "hiçbir yerde", trOpposite: "her yerde" },
+      { word: "selbstständig", opposite: "abhängig", trWord: "bağımsız", trOpposite: "bağımlı" },
+      { word: "unabhängig", opposite: "abhängig", trWord: "bağımsız", trOpposite: "bağımlı" },
+      { word: "flexibel", opposite: "starr", trWord: "esnek", trOpposite: "katı" },
+      { word: "neutral", opposite: "parteiisch", trWord: "tarafsız", trOpposite: "taraflı" },
+      { word: "offiziell", opposite: "inoffiziell", trWord: "resmî", trOpposite: "gayriresmî" },
+      { word: "kompliziert", opposite: "einfach", trWord: "karmaşık", trOpposite: "basit/kolay" },
+      { word: "transparent", opposite: "undurchsichtig", trWord: "şeffaf", trOpposite: "opak/anlaşılmaz" },
+      { word: "direkt", opposite: "indirekt", trWord: "doğrudan", trOpposite: "dolaylı" },
+      { word: "praktisch", opposite: "theoretisch", trWord: "pratik", trOpposite: "teorik" },
+      { word: "kreativ", opposite: "unkreativ", trWord: "yaratıcı", trOpposite: "yaratıcı olmayan" },
+      { word: "realistisch", opposite: "unrealistisch", trWord: "gerçekçi", trOpposite: "gerçekçi olmayan" },
+      { word: "normal", opposite: "ungewöhnlich", trWord: "normal", trOpposite: "alışılmadık" },
+      { word: "frisch", opposite: "verdorben", trWord: "taze", trOpposite: "bozulmuş" },
+      { word: "süß", opposite: "bitter", trWord: "tatlı", trOpposite: "acı" },
+      { word: "scharf", opposite: "mild", trWord: "acı/keskin", trOpposite: "hafif" },
+      { word: "klar", opposite: "unklar", trWord: "açık/net", trOpposite: "belirsiz" },
+      { word: "fest", opposite: "locker", trWord: "sıkı/sağlam", trOpposite: "gevşek" },
+      { word: "eng", opposite: "weit", trWord: "dar", trOpposite: "geniş" },
+      { word: "höflich", opposite: "unhöflich", trWord: "kibar", trOpposite: "kaba" },
+      { word: "hilfreich", opposite: "nutzlos", trWord: "yardımcı/faydalı", trOpposite: "faydasız" },
+      { word: "sensibel", opposite: "gefühllos", trWord: "hassas", trOpposite: "duygusuz" },
+      { word: "ernst", opposite: "lustig", trWord: "ciddi", trOpposite: "komik/eğlenceli" },
+      { word: "friedlich", opposite: "aggressiv", trWord: "barışçıl", trOpposite: "saldırgan" },
+      { word: "sparsam", opposite: "verschwenderisch", trWord: "tutumlu", trOpposite: "savurgan" },
+      { word: "vorsichtig", opposite: "leichtsinnig", trWord: "dikkatli", trOpposite: "düşüncesiz/tedbirsiz" },
+      { word: "geordnet", opposite: "unordentlich", trWord: "düzenli", trOpposite: "düzensiz" },
+      { word: "sympathisch", opposite: "unsympathisch", trWord: "sempatik", trOpposite: "sevimsiz" },
+      { word: "gerecht", opposite: "ungerecht", trWord: "adil", trOpposite: "haksız/adaletsiz" },
+      { word: "legal", opposite: "illegal", trWord: "yasal", trOpposite: "yasa dışı" },
+      { word: "verfügbar", opposite: "besetzt", trWord: "müsait", trOpposite: "meşgul/dolu" },
+      { word: "sichtbar", opposite: "unsichtbar", trWord: "görünür", trOpposite: "görünmez" },
+      { word: "real", opposite: "virtuell", trWord: "gerçek", trOpposite: "sanal" },
+      { word: "satt", opposite: "hungrig", trWord: "tok", trOpposite: "aç" },
+      { word: "durstig", opposite: "nicht durstig", trWord: "susamış", trOpposite: "susamamış" },
+      { word: "anfänger", opposite: "profi", trWord: "acemi", trOpposite: "profesyonel" },
+      { word: "kind", opposite: "erwachsener", trWord: "çocuk", trOpposite: "yetişkin" },
+      { word: "arbeitgeber", opposite: "arbeitnehmer", trWord: "işveren", trOpposite: "işçi/çalışan" },
+      { word: "führer", opposite: "folger", trWord: "lider", trOpposite: "takipçi" },
+      { word: "gewinner", opposite: "verlierer", trWord: "kazanan", trOpposite: "kaybeden" },
+      { word: "freund", opposite: "feind", trWord: "dost", trOpposite: "düşman" },
+      { word: "tag", opposite: "nacht", trWord: "gün", trOpposite: "gece" },
+      { word: "anfang", opposite: "ende", trWord: "başlangıç", trOpposite: "son" },
+      { word: "gewinn", opposite: "verlust", trWord: "kazanç", trOpposite: "kayıp/zarar" },
+      { word: "liebe", opposite: "hass", trWord: "sevgi/aşk", trOpposite: "nefret" },
+      { word: "frieden", opposite: "krieg", trWord: "barış", trOpposite: "savaş" },
+      { word: "ordnung", opposite: "chaos", trWord: "düzen", trOpposite: "kaos" },
+      { word: "licht", opposite: "schatten", trWord: "ışık", trOpposite: "gölge" },
+      { word: "wahrheit", opposite: "lüge", trWord: "gerçek", trOpposite: "yalan" },
+      { word: "ruhe", opposite: "stress", trWord: "huzur/sakinlik", trOpposite: "stres" },
+      { word: "erfolg", opposite: "misserfolg", trWord: "başarı", trOpposite: "başarısızlık" },
+      { word: "hoffnung", opposite: "verzweiflung", trWord: "umut", trOpposite: "umutsuzluk" },
+      { word: "vorteil", opposite: "nachteil", trWord: "avantaj", trOpposite: "dezavantaj" },
+      { word: "eintritt", opposite: "austritt", trWord: "giriş", trOpposite: "çıkış/ayrılış" },
+      { word: "import", opposite: "export", trWord: "ithalat", trOpposite: "ihracat" },
+      { word: "arbeit", opposite: "pause", trWord: "çalışma/iş", trOpposite: "mola" },
+      { word: "start", opposite: "ziel", trWord: "başlangıç", trOpposite: "hedef/varış" },
+      { word: "minimum", opposite: "maximum", trWord: "en az", trOpposite: "en çok" },
+      { word: "plus", opposite: "minus", trWord: "artı", trOpposite: "eksi" },
+      { word: "frage", opposite: "antwort", trWord: "soru", trOpposite: "cevap" },
+      { word: "realität", opposite: "fantasie", trWord: "gerçeklik", trOpposite: "hayal" },
+      { word: "aufstieg", opposite: "abstieg", trWord: "yükseliş", trOpposite: "iniş/düşüş" },
+      { word: "fortschritt", opposite: "rückschritt", trWord: "ilerleme", trOpposite: "gerileme" },
+      { word: "mehrheit", opposite: "minderheit", trWord: "çoğunluk", trOpposite: "azınlık" },
+      { word: "öffentlich", opposite: "privat", trWord: "kamusal/açık", trOpposite: "özel" },
+      { word: "lokal", opposite: "global", trWord: "yerel", trOpposite: "küresel" },
+      { word: "theorie", opposite: "praxis", trWord: "teori", trOpposite: "pratik/uygulama" },
+      { word: "angebot", opposite: "nachfrage", trWord: "arz/teklif", trOpposite: "talep" },
+      { word: "geburt", opposite: "tod", trWord: "doğum", trOpposite: "ölüm" },
+      { word: "eingang", opposite: "ausgang", trWord: "giriş", trOpposite: "çıkış" },
+      { word: "anstieg", opposite: "abfall", trWord: "artış", trOpposite: "düşüş" },
+      { word: "nähe", opposite: "distanz", trWord: "yakınlık", trOpposite: "mesafe" },
+      { word: "kompliment", opposite: "kritik", trWord: "iltifat", trOpposite: "eleştiri" },
+      { word: "respekt", opposite: "verachtung", trWord: "saygı", trOpposite: "küçümseme" },
+      { word: "harmonie", opposite: "konflikt", trWord: "uyum", trOpposite: "çatışma" },
+      { word: "vertrauen", opposite: "misstrauen", trWord: "güven", trOpposite: "güvensizlik" },
+      { word: "freiheit", opposite: "zwang", trWord: "özgürlük", trOpposite: "zorunluluk/baskı" },
+      { word: "stille", opposite: "lärm", trWord: "sessizlik", trOpposite: "gürültü" },
+      { word: "gesundheit", opposite: "krankheit", trWord: "sağlık", trOpposite: "hastalık" },
+      { word: "liefern", opposite: "abholen", trWord: "teslim etmek", trOpposite: "gidip almak" },
+      { word: "geben", opposite: "nehmen", trWord: "vermek", trOpposite: "almak" },
+      { word: "kommen", opposite: "gehen", trWord: "gelmek", trOpposite: "gitmek" },
+      { word: "beginnen", opposite: "beenden", trWord: "başlamak", trOpposite: "bitirmek" },
+      { word: "öffnen", opposite: "schließen", trWord: "açmak", trOpposite: "kapatmak" },
+      { word: "steigen", opposite: "fallen", trWord: "yükselmek", trOpposite: "düşmek" },
+      { word: "kaufen", opposite: "verkaufen", trWord: "satın almak", trOpposite: "satmak" },
+      { word: "finden", opposite: "verlieren", trWord: "bulmak", trOpposite: "kaybetmek" },
+      { word: "fragen", opposite: "antworten", trWord: "sormak", trOpposite: "cevaplamak" },
+      { word: "lachen", opposite: "weinen", trWord: "gülmek", trOpposite: "ağlamak" },
+      { word: "lieben", opposite: "hassen", trWord: "sevmek", trOpposite: "nefret etmek" },
+      { word: "leben", opposite: "sterben", trWord: "yaşamak", trOpposite: "ölmek" },
+      { word: "erinnern", opposite: "vergessen", trWord: "hatırlamak", trOpposite: "unutmak" },
+      { word: "verbinden", opposite: "trennen", trWord: "bağlamak/birleştirmek", trOpposite: "ayırmak" },
+      { word: "akzeptieren", opposite: "ablehnen", trWord: "kabul etmek", trOpposite: "reddetmek" },
+      { word: "zustimmen", opposite: "widersprechen", trWord: "onaylamak/katılmak", trOpposite: "itiraz etmek" },
+      { word: "erscheinen", opposite: "verschwinden", trWord: "ortaya çıkmak/görünmek", trOpposite: "kaybolmak" },
+      { word: "hinzufügen", opposite: "entfernen", trWord: "eklemek", trOpposite: "çıkarmak/kaldırmak" },
+      { word: "aufbauen", opposite: "abbauen", trWord: "kurmak/inşa etmek", trOpposite: "sökmek/azaltmak" },
+      { word: "beschleunigen", opposite: "verlangsamen", trWord: "hızlandırmak", trOpposite: "yavaşlatmak" },
+      { word: "einsteigen", opposite: "aussteigen", trWord: "binmek", trOpposite: "inmek" },
+      { word: "annehmen", opposite: "ablehnen", trWord: "kabul etmek", trOpposite: "reddetmek" },
+      { word: "erhöhen", opposite: "senken", trWord: "artırmak", trOpposite: "azaltmak/indirmek" },
+      { word: "einladen", opposite: "ausladen", trWord: "davet etmek", trOpposite: "daveti geri çekmek" },
+      { word: "ankommen", opposite: "abfahren", trWord: "varmak", trOpposite: "hareket etmek/ayrılmak" },
+      { word: "vergrößern", opposite: "verkleinern", trWord: "büyütmek", trOpposite: "küçültmek" },
+      { word: "stärken", opposite: "schwächen", trWord: "güçlendirmek", trOpposite: "zayıflatmak" },
+      { word: "starten", opposite: "stoppen", trWord: "başlatmak", trOpposite: "durdurmak" },
+      { word: "reparieren", opposite: "beschädigen", trWord: "tamir etmek", trOpposite: "zarar vermek" },
+      { word: "füllen", opposite: "leeren", trWord: "doldurmak", trOpposite: "boşaltmak" },
+      { word: "verbessern", opposite: "verschlechtern", trWord: "iyileştirmek", trOpposite: "kötüleştirmek" },
+      { word: "erlauben", opposite: "verbieten", trWord: "izin vermek", trOpposite: "yasaklamak" },
+      { word: "unterstützen", opposite: "hindern", trWord: "desteklemek", trOpposite: "engel olmak" },
+      { word: "aufstehen", opposite: "hinlegen", trWord: "ayağa kalkmak", trOpposite: "uzanmak/yatmak" },
+      { word: "einatmen", opposite: "ausatmen", trWord: "nefes almak", trOpposite: "nefes vermek" },
+      { word: "zunehmen", opposite: "abnehmen", trWord: "kilo almak/artmak", trOpposite: "kilo vermek/azalmak" },
+      { word: "anmelden", opposite: "abmelden", trWord: "kayıt yaptırmak", trOpposite: "kaydını silmek" },
+      { word: "einpacken", opposite: "auspacken", trWord: "paketlemek", trOpposite: "paketten çıkarmak" },
+      { word: "zusammenbauen", opposite: "auseinanderbauen", trWord: "monte etmek", trOpposite: "sökmek" },
+      { word: "sparen", opposite: "ausgeben", trWord: "biriktirmek/tasarruf etmek", trOpposite: "harcamak" },
+      { word: "schützen", opposite: "gefährden", trWord: "korumak", trOpposite: "tehlikeye atmak" },
+      { word: "erklären", opposite: "verwirren", trWord: "açıklamak", trOpposite: "kafasını karıştırmak" },
+      { word: "ordnen", opposite: "durcheinanderbringen", trWord: "düzenlemek", trOpposite: "karıştırmak" },
+      { word: "erreichen", opposite: "verpassen", trWord: "ulaşmak/yakalamak", trOpposite: "kaçırmak" },
+      { word: "vergröbern", opposite: "verfeinern", trWord: "kabalaştırmak", trOpposite: "inceltmek/rafine etmek" },
+      { word: "abkühlen", opposite: "erwärmen", trWord: "soğutmak", trOpposite: "ısıtmak" },
+      { word: "verzeihen", opposite: "bestrafen", trWord: "affetmek", trOpposite: "cezalandırmak" },
+      { word: "erkennen", opposite: "ignorieren", trWord: "fark etmek/tanımak", trOpposite: "görmezden gelmek" },
+      { word: "behalten", opposite: "wegwerfen", trWord: "saklamak/elinde tutmak", trOpposite: "atmak" },
+      { word: "zusagen", opposite: "absagen", trWord: "kabul etmek/onay vermek", trOpposite: "iptal etmek/reddetmek" },
+      { word: "aufnehmen", opposite: "löschen", trWord: "kaydetmek/almak", trOpposite: "silmek" },
+    ];
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function speakText(text, onEnd = null) {
+      if (!("speechSynthesis" in window)) {
+        if (onEnd) onEnd();
+        return;
+      }
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "de-DE";
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.onend = () => onEnd && onEnd();
+      utterance.onerror = () => onEnd && onEnd();
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakSequence(parts, onEnd = null) {
+      if (!("speechSynthesis" in window)) {
+        if (onEnd) onEnd();
+        return;
+      }
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      let index = 0;
+
+      function speakNext() {
+        if (index >= parts.length) {
+          if (onEnd) onEnd();
+          return;
+        }
+        const part = parts[index++];
+        const utterance = new SpeechSynthesisUtterance(part.text);
+        utterance.lang = part.lang || "de-DE";
+        utterance.rate = part.rate || 0.9;
+        utterance.pitch = 1;
+        utterance.onend = speakNext;
+        utterance.onerror = speakNext;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      speakNext();
+    }
+
+    function speakBilingualPair(item, onEnd = null) {
+      speakSequence([
+        { text: `${item.word} ... ${item.opposite}`, lang: "de-DE", rate: 0.9 },
+        { text: `${item.trWord} ... ${item.trOpposite}`, lang: "tr-TR", rate: 0.72 }
+      ], onEnd);
+    }
+
+    const screens = {
+      menu: document.getElementById("menuScreen"),
+      choice: document.getElementById("choiceScreen"),
+      match: document.getElementById("matchScreen")
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove("active"));
+      screens[name].classList.add("active");
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    }
+
+    document.getElementById("nextBtnTop").addEventListener("click", () => showScreen("menu"));
+
+    /* ---------- SEÇENEKLİ MOD ---------- */
+    const choiceQuestionWord = document.getElementById("choiceQuestionWord");
+    const choiceAnswers = document.getElementById("choiceAnswers");
+    const choiceResult = document.getElementById("choiceResult");
+    const choiceRoundText = document.getElementById("choiceRoundText");
+    const choiceCorrectCount = document.getElementById("choiceCorrectCount");
+    const choiceWrongCount = document.getElementById("choiceWrongCount");
+
+    let choiceCurrent = null;
+    let choiceRound = 1;
+    let choiceCorrect = 0;
+    let choiceWrong = 0;
+    let choiceLocked = false;
+    let choiceAutoTimeout = null;
+
+    function getChoiceOptions(correctItem) {
+      const distractors = shuffleArray(oppositeData.filter(x => x.opposite !== correctItem.opposite)).slice(0, 3);
+      return shuffleArray([correctItem, ...distractors]);
+    }
+
+    function renderChoiceQuestion() {
+      clearTimeout(choiceAutoTimeout);
+      choiceLocked = false;
+      choiceResult.textContent = "";
+      choiceCurrent = shuffleArray(oppositeData)[0];
+      choiceQuestionWord.textContent = choiceCurrent.word;
+      choiceRoundText.textContent = `${choiceRound} / 10`;
+      choiceAnswers.innerHTML = "";
+
+      const options = getChoiceOptions(choiceCurrent);
+      options.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.className = "answer-btn";
+        btn.textContent = item.opposite;
+        btn.addEventListener("click", () => handleChoiceAnswer(item, btn));
+        choiceAnswers.appendChild(btn);
+      });
+
+      speakText(choiceCurrent.word);
+    }
+
+    function goNextChoiceQuestion() {
+      choiceRound++;
+      renderChoiceQuestion();
+    }
+
+    function handleChoiceAnswer(item, btn) {
+      if (choiceLocked) return;
+      const isCorrect = item.opposite === choiceCurrent.opposite;
+
+      if (isCorrect) {
+        choiceLocked = true;
+        btn.classList.add("correct");
+        choiceCorrect++;
+        choiceCorrectCount.textContent = choiceCorrect;
+        choiceResult.innerHTML = `Doğru: ${choiceCurrent.word} ↔ ${choiceCurrent.opposite}<span class="tr-line">${choiceCurrent.trWord} ↔ ${choiceCurrent.trOpposite}</span>`;
+
+        const allBtns = choiceAnswers.querySelectorAll(".answer-btn");
+        allBtns.forEach(b => b.disabled = true);
+
+        speakBilingualPair(choiceCurrent, () => {
+          choiceAutoTimeout = setTimeout(goNextChoiceQuestion, CHOICE_AUTO_NEXT_DELAY);
+        });
+      } else {
+        btn.classList.add("wrong", "disabled-wrong");
+        btn.disabled = true;
+        choiceWrong++;
+        choiceWrongCount.textContent = choiceWrong;
+        choiceResult.textContent = "Yanlış, tekrar dene";
+      }
+    }
+
+    document.getElementById("choiceModeBtn").addEventListener("click", () => {
+      choiceRound = 1;
+      choiceCorrect = 0;
+      choiceWrong = 0;
+      choiceCorrectCount.textContent = "0";
+      choiceWrongCount.textContent = "0";
+      showScreen("choice");
+      renderChoiceQuestion();
+    });
+
+    document.getElementById("choiceBackBtn").addEventListener("click", () => showScreen("menu"));
+    document.getElementById("choiceNextBtn").addEventListener("click", goNextChoiceQuestion);
+
+    /* ---------- EŞLEŞTİRME MODU ---------- */
+    const leftWords = document.getElementById("leftWords");
+    const rightWords = document.getElementById("rightWords");
+    const matchResult = document.getElementById("matchResult");
+    const matchRoundText = document.getElementById("matchRoundText");
+    const matchCorrectCount = document.getElementById("matchCorrectCount");
+    const matchWrongCount = document.getElementById("matchWrongCount");
+
+    let matchSet = [];
+    let selectedLeft = null;
+    let matchRound = 1;
+    let matchCorrect = 0;
+    let matchWrong = 0;
+    let matchDoneCount = 0;
+    let matchAutoTimeout = null;
+
+    function renderMatchGame() {
+      clearTimeout(matchAutoTimeout);
+      matchSet = shuffleArray(oppositeData).slice(0, 5);
+      selectedLeft = null;
+      matchDoneCount = 0;
+      matchResult.textContent = "";
+      matchRoundText.textContent = `${matchRound} / 5`;
+      leftWords.innerHTML = "";
+      rightWords.innerHTML = "";
+
+      matchSet.forEach(item => {
+        const btn = document.createElement("button");
+        btn.className = "word-item";
+        btn.textContent = item.word;
+        btn.addEventListener("click", () => selectLeftWord(btn, item));
+        leftWords.appendChild(btn);
+      });
+
+      shuffleArray(matchSet).forEach(item => {
+        const btn = document.createElement("button");
+        btn.className = "opposite-item";
+        btn.textContent = item.opposite;
+        btn.addEventListener("click", () => tryMatchOpposite(btn, item));
+        rightWords.appendChild(btn);
+      });
+    }
+
+    function goNextMatchSet() {
+      matchRound++;
+      renderMatchGame();
+    }
+
+    function selectLeftWord(btn, item) {
+      const all = leftWords.querySelectorAll(".word-item");
+      all.forEach(x => x.classList.remove("selected"));
+      if (btn.disabled) return;
+      btn.classList.add("selected");
+      selectedLeft = { btn, item };
+      speakText(item.word);
+    }
+
+    function tryMatchOpposite(btn, item) {
+      if (!selectedLeft || btn.classList.contains("correct")) return;
+
+      if (selectedLeft.item.word === item.word) {
+        btn.classList.add("correct", "matched-pair");
+        btn.innerHTML = `
+          <span class="matched-pair-de">${selectedLeft.item.word} = ${item.opposite}</span>
+          <span class="matched-pair-tr match-tr-line">${selectedLeft.item.trWord} = ${item.trOpposite}</span>
+        `;
+        selectedLeft.btn.disabled = true;
+        selectedLeft.btn.style.opacity = "0.35";
+        selectedLeft.btn.classList.remove("selected");
+        selectedLeft = null;
+
+        matchCorrect++;
+        matchDoneCount++;
+        matchCorrectCount.textContent = matchCorrect;
+        matchResult.textContent = `Doğru eşleşme`;
+
+        speakBilingualPair(item);
+
+        if (matchDoneCount === 5) {
+          matchResult.textContent = "Set tamamlandı";
+          matchAutoTimeout = setTimeout(goNextMatchSet, MATCH_AUTO_NEXT_DELAY);
+        }
+      } else {
+        matchWrong++;
+        matchWrongCount.textContent = matchWrong;
+        matchResult.textContent = "Yanlış eşleşme";
+      }
+    }
+
+    document.getElementById("matchModeBtn").addEventListener("click", () => {
+      matchRound = 1;
+      matchCorrect = 0;
+      matchWrong = 0;
+      matchCorrectCount.textContent = "0";
+      matchWrongCount.textContent = "0";
+      showScreen("match");
+      renderMatchGame();
+    });
+
+    document.getElementById("matchBackBtn").addEventListener("click", () => showScreen("menu"));
+    document.getElementById("matchNextBtn").addEventListener("click", goNextMatchSet);
+  </script>
+</body>
+</html>
